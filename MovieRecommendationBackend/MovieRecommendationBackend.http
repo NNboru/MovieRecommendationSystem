@@ -1,0 +1,52 @@
+### Test the Movie Recommendation API
+
+### 1. Get all movies
+GET https://localhost:7000/api/movies
+
+### 2. Get popular movies from TMDB
+GET https://localhost:7000/api/movies/popular
+
+### 3. Search movies
+GET https://localhost:7000/api/movies/search?q=inception
+
+### 4. Get all genres
+GET https://localhost:7000/api/genres
+
+### 5. Get all users
+GET https://localhost:7000/api/users
+
+### 6. Create a new user
+POST https://localhost:7000/api/users
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 7. Get trending movies
+GET https://localhost:7000/api/recommendations/trending
+
+### 8. Get personalized recommendations for user 1
+GET https://localhost:7000/api/recommendations/personalized/1
+
+### 9. Get similar movies to movie 1
+GET https://localhost:7000/api/recommendations/similar/1
+
+### 10. Rate a movie
+POST https://localhost:7000/api/ratings?userId=1&movieId=1
+Content-Type: application/json
+
+{
+  "score": 5,
+  "comment": "Amazing movie! One of my favorites."
+}
+
+### 11. Get movie ratings
+GET https://localhost:7000/api/ratings/movie/1
+
+### 12. Get average rating for a movie
+GET https://localhost:7000/api/ratings/average/movie/1
