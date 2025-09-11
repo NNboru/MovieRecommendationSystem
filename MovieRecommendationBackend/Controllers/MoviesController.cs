@@ -219,7 +219,7 @@ public class MoviesController : ControllerBase
                 }
             }
 
-            return Ok(movies);
+            return Ok(CreateUIResponse(movies));
         }
         catch (Exception ex)
         {
@@ -260,7 +260,7 @@ public class MoviesController : ControllerBase
         try
         {
             var recommendations = await _tmdbService.GetRecommendationsAsync(movie.TMDBId.Value);
-            return Ok(recommendations);
+            return Ok(CreateUIResponse(recommendations));
         }
         catch (Exception ex)
         {

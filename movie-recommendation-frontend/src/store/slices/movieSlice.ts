@@ -70,8 +70,8 @@ export const fetchTopRatedMovies = createAsyncThunk(
 
 export const searchMovies = createAsyncThunk(
   'movies/search',
-  async (filters: SearchFilters) => {
-    const response = await movieApi.searchMovies(filters);
+  async ({ filters, page = 1 }: { filters: SearchFilters; page?: number }) => {
+    const response = await movieApi.searchMovies(filters, page);
     return response;
   }
 );

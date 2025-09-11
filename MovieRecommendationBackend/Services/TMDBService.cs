@@ -111,13 +111,13 @@ public class TMDBService : ITMDBService
         return movie != null ? MapToMovieDto(movie) : null;
     }
 
-    public async Task<List<string>> GetGenresAsync()
+    public async Task<List<GenreDto>> GetGenresAsync()
     {
         var url = $"{_baseUrl}/genre/movie/list";
         string content = await ApiCall(url);
         var result = JsonConvert.DeserializeObject<TMDBGenreResponse>(content);
 
-        return result?.Genres?.Select(g => g.Name).ToList() ?? new List<string>();
+        return result?.Genres?.Select(genre => MapToGenreDto(genre))?.ToList() ?? new List<GenreDto>();
     }
 
     public async Task<List<MovieDto>> GetMoviesByGenreAsync(int genreId, int page = 1)
@@ -155,6 +155,15 @@ public class TMDBService : ITMDBService
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
             Genres = new List<string>()
+        };
+    }
+
+    private static GenreDto MapToGenreDto(TMDBGenre genre)
+    {
+        return new GenreDto
+        {
+            Name = genre.Name,
+            Id = genre.Id
         };
     }
 
@@ -213,7 +222,7 @@ public class TMDBService : ITMDBService
         public List<TMDBGenre>? Genres { get; set; }
     }
 
-    private class TMDBGenre
+    public class TMDBGenre
     {
         [JsonProperty("id")]
         public int Id { get; set; }

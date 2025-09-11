@@ -73,7 +73,7 @@ export const movieApi = {
   },
 
   // Search movies through our backend
-  searchMovies: async (filters: SearchFilters): Promise<PaginatedResponse<Movie>> => {
+  searchMovies: async (filters: SearchFilters, page: number = 1): Promise<PaginatedResponse<Movie>> => {
     const params = new URLSearchParams();
     
     if (filters.query) params.append('q', filters.query);
@@ -86,7 +86,7 @@ export const movieApi = {
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
     
-    params.append('page', '1');
+    params.append('page', page.toString());
 
     const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(
       `/movies/search?${params.toString()}`
