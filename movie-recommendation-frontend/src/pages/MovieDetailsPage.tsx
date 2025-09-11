@@ -35,7 +35,7 @@ const MovieDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +215,7 @@ const MovieDetailsPage: React.FC = () => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
+            gridTemplateColumns: { xs: '1fr 2fr', md: '1fr 2fr' },
             gap: 4,
             alignItems: 'start',
           }}
@@ -337,7 +337,7 @@ const MovieDetailsPage: React.FC = () => {
                 >
                   Watch Trailer
                 </Button>
-                
+
                 <Button
                   variant={isInWatchlist ? "outlined" : "contained"}
                   startIcon={isInWatchlist ? <BookmarkRemove /> : <BookmarkAdd />}
@@ -363,7 +363,7 @@ const MovieDetailsPage: React.FC = () => {
           <Typography variant="h4" sx={{ mb: 3 }}>
             More Information
           </Typography>
-          
+
           <Box
             sx={{
               display: 'grid',
@@ -411,7 +411,7 @@ const MovieDetailsPage: React.FC = () => {
                       value={movie.userRating || 0}
                       precision={0.5}
                       size="large"
-                      // TODO: Implement rating functionality
+                    // TODO: Implement rating functionality
                     />
                   </Box>
                   {!isAuthenticated && (

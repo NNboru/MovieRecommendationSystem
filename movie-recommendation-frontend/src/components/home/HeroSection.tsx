@@ -48,7 +48,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ movies }) => {
   const currentMovie = movies[currentMovieIndex];
 
   const handleMovieClick = () => {
-    navigate(`/movie/${currentMovie.id}`);
+    navigate(`/movie/${currentMovie.tmdbId}`);
   };
 
   const handleAddToWatchlist = () => {

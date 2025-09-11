@@ -54,7 +54,7 @@ const MovieList: React.FC<MovieListProps> = ({
       >
         {movies.map((movie) => (
           <MovieCard
-            key={movie.id}
+            key={movie.tmdbId}
             movie={movie}
             onMovieClick={onMovieClick}
             showWatchlistButton={showWatchlistButton}
