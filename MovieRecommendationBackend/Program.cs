@@ -1,3 +1,6 @@
+
+
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using MovieRecommendationBackend.Data;
 using MovieRecommendationBackend.Services;
@@ -14,6 +17,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add HttpClient for TMDB service
+builder.Services.AddHttpClient<TMDBService>(client =>
+{
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("MovieRecommendationApp/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Add general HttpClient
 builder.Services.AddHttpClient();
 
 // Register services

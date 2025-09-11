@@ -53,18 +53,18 @@ public class DatabaseSeederService
                 new User
                 {
                     Username = "admin",
-                    Email = "admin@example.com",
+                    Email = "rohan.rawat.9897@gmail.com",
                     PasswordHash = "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=", // "admin123"
                     FirstName = "Admin",
                     LastName = "User"
                 },
                 new User
                 {
-                    Username = "john_doe",
-                    Email = "john@example.com",
+                    Username = "Rohan Rawat",
+                    Email = "rohan.rawat.9897@gmail.com",
                     PasswordHash = "XohImNooBHFR0OVvjcYpJ3NgPQ1qq73WKhHvch0VQtg=", // "password123"
-                    FirstName = "John",
-                    LastName = "Doe"
+                    FirstName = "Rohan",
+                    LastName = "Rawat"
                 }
             };
 

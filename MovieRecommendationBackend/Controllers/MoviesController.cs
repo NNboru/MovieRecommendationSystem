@@ -13,6 +13,16 @@ public class MoviesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ITMDBService _tmdbService;
+    private static DefaultResponse CreateUIResponse(IEnumerable<object> data)
+    {
+        return new DefaultResponse
+        {
+            Data = data,
+            Page = 1,
+            TotalPages = 1,
+            TotalResults = data.Count()
+        };
+    }
 
     public MoviesController(ApplicationDbContext context, ITMDBService tmdbService)
     {
@@ -37,6 +47,7 @@ public class MoviesController : ControllerBase
         return Ok(movieDtos);
     }
 
+
     // GET: api/movies/5
     [HttpGet("{id}")]
     public async Task<ActionResult<MovieDto>> GetMovie(int id)
@@ -54,6 +65,27 @@ public class MoviesController : ControllerBase
         return MapToMovieDto(movie);
     }
 
+    // GET: api/movies/tmdb/{tmdbId}
+    [HttpGet("tmdb/{tmdbId}")]
+    public async Task<ActionResult<MovieDto>> GetMovieByTMDBId(int tmdbId)
+    {
+        try
+        {
+            var movie = await _tmdbService.GetMovieByIdAsync(tmdbId);
+            
+            if (movie == null)
+            {
+                return NotFound($"Movie with TMDB ID {tmdbId} not found");
+            }
+
+            return Ok(movie);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error fetching movie details: {ex.Message}");
+        }
+    }
+
     // GET: api/movies/popular
     [HttpGet("popular")]
     public async Task<ActionResult<IEnumerable<MovieDto>>> GetPopularMovies([FromQuery] int page = 1)
@@ -61,7 +93,7 @@ public class MoviesController : ControllerBase
         try
         {
             var movies = await _tmdbService.GetPopularMoviesAsync(page);
-            return Ok(movies);
+            return Ok(CreateUIResponse(movies));
         }
         catch (Exception ex)
         {
@@ -69,18 +101,124 @@ public class MoviesController : ControllerBase
         }
     }
 
-    // GET: api/movies/search?q=query
-    [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<MovieDto>>> SearchMovies([FromQuery] string q, [FromQuery] int page = 1)
+    // GET: api/movies/trending
+    [HttpGet("trending")]
+    public async Task<ActionResult<DefaultResponse>> GetTrendingMovies([FromQuery] int page = 1)
     {
-        if (string.IsNullOrWhiteSpace(q))
-        {
-            return BadRequest("Search query is required");
-        }
-
         try
         {
-            var movies = await _tmdbService.SearchMoviesAsync(q, page);
+            var movies = await _tmdbService.GetTrendingMoviesAsync(page);
+            return Ok(CreateUIResponse(movies));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error fetching trending movies: {ex.Message}");
+        }
+    }
+
+    // GET: api/movies/top-rated
+    [HttpGet("top-rated")]
+    public async Task<ActionResult<DefaultResponse>> GetTopRatedMovies([FromQuery] int page = 1)
+    {
+        try
+        {
+            var movies = await _tmdbService.GetTopRatedMoviesAsync(page);
+            return Ok(CreateUIResponse(movies));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error fetching top rated movies: {ex.Message}");
+        }
+    }
+
+    // GET: api/movies/search?q=query
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<MovieDto>>> SearchMovies(
+        [FromQuery] string? q, 
+        [FromQuery] int? genre,
+        [FromQuery] string? releaseDateFrom,
+        [FromQuery] string? releaseDateTo,
+        [FromQuery] string? language,
+        [FromQuery] double? minRating,
+        [FromQuery] double? maxRating,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? sortOrder,
+        [FromQuery] int page = 1)
+    {
+        try
+        {
+            List<MovieDto> movies;
+            
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                // Text search
+                movies = await _tmdbService.SearchMoviesAsync(q, page);
+            }
+            else if (genre.HasValue)
+            {
+                // Genre-based search
+                movies = await _tmdbService.GetMoviesByGenreAsync(genre.Value, page);
+            }
+            else
+            {
+                // Default to popular movies if no search criteria
+                movies = await _tmdbService.GetPopularMoviesAsync(page);
+            }
+
+            // Apply additional filters if provided
+            if (!string.IsNullOrWhiteSpace(releaseDateFrom))
+            {
+                movies = movies.Where(m => m.ReleaseDate != null && m.ReleaseDate.CompareTo(releaseDateFrom) >= 0).ToList();
+            }
+            
+            if (!string.IsNullOrWhiteSpace(releaseDateTo))
+            {
+                movies = movies.Where(m => m.ReleaseDate != null && m.ReleaseDate.CompareTo(releaseDateTo) <= 0).ToList();
+            }
+            
+            if (!string.IsNullOrWhiteSpace(language))
+            {
+                movies = movies.Where(m => m.OriginalLanguage == language).ToList();
+            }
+            
+            if (minRating.HasValue)
+            {
+                movies = movies.Where(m => m.VoteAverage >= minRating.Value).ToList();
+            }
+            
+            if (maxRating.HasValue)
+            {
+                movies = movies.Where(m => m.VoteAverage <= maxRating.Value).ToList();
+            }
+
+            // Apply sorting
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                switch (sortBy.ToLower())
+                {
+                    case "popularity":
+                        movies = sortOrder == "desc" 
+                            ? movies.OrderByDescending(m => m.Popularity).ToList()
+                            : movies.OrderBy(m => m.Popularity).ToList();
+                        break;
+                    case "vote_average":
+                        movies = sortOrder == "desc"
+                            ? movies.OrderByDescending(m => m.VoteAverage).ToList()
+                            : movies.OrderBy(m => m.VoteAverage).ToList();
+                        break;
+                    case "release_date":
+                        movies = sortOrder == "desc"
+                            ? movies.OrderByDescending(m => m.ReleaseDate).ToList()
+                            : movies.OrderBy(m => m.ReleaseDate).ToList();
+                        break;
+                    case "title":
+                        movies = sortOrder == "desc"
+                            ? movies.OrderByDescending(m => m.Title).ToList()
+                            : movies.OrderBy(m => m.Title).ToList();
+                        break;
+                }
+            }
+
             return Ok(movies);
         }
         catch (Exception ex)
@@ -91,12 +229,12 @@ public class MoviesController : ControllerBase
 
     // GET: api/movies/genre/{genreId}
     [HttpGet("genre/{genreId}")]
-    public async Task<ActionResult<IEnumerable<MovieDto>>> GetMoviesByGenre(int genreId, [FromQuery] int page = 1)
+    public async Task<ActionResult<DefaultResponse>> GetMoviesByGenre(int genreId, [FromQuery] int page = 1)
     {
         try
         {
             var movies = await _tmdbService.GetMoviesByGenreAsync(genreId, page);
-            return Ok(movies);
+            return Ok(CreateUIResponse(movies));
         }
         catch (Exception ex)
         {
