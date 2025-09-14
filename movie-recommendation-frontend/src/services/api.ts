@@ -5,6 +5,9 @@ import {
   User, 
   LoginForm, 
   RegisterForm, 
+  UpdateProfileForm,
+  ChangePasswordForm,
+  AuthResponse,
   SearchFilters,
   PaginatedResponse
 } from '../types';
@@ -137,37 +140,46 @@ export const movieApi = {
 
 // Auth API
 export const authApi = {
-  login: async (credentials: LoginForm): Promise<{ user: User; token: string }> => {
-    const response: AxiosResponse<{ user: User; token: string }> = await apiClient.post(
+  login: async (credentials: LoginForm): Promise<AuthResponse> => {
+    const response: AxiosResponse<AuthResponse> = await apiClient.post(
       '/auth/login',
       credentials
     );
     return response.data;
   },
 
-  register: async (userData: RegisterForm): Promise<{ user: User; token: string }> => {
-    const response: AxiosResponse<{ user: User; token: string }> = await apiClient.post(
+  register: async (userData: RegisterForm): Promise<AuthResponse> => {
+    const response: AxiosResponse<AuthResponse> = await apiClient.post(
       '/auth/register',
       userData
     );
     return response.data;
   },
 
-  getUserProfile: async (userId: number): Promise<User> => {
-    const response: AxiosResponse<User> = await apiClient.get(`/users/${userId}`);
+  getCurrentUser: async (): Promise<User> => {
+    const response: AxiosResponse<User> = await apiClient.get('/auth/me');
     return response.data;
   },
 
-  updateUserProfile: async (userId: number, userData: Partial<User>): Promise<User> => {
+  updateProfile: async (userData: UpdateProfileForm): Promise<User> => {
     const response: AxiosResponse<User> = await apiClient.put(
-      `/users/${userId}`,
+      '/auth/profile',
       userData
     );
     return response.data;
   },
 
-  deleteAccount: async (userId: number): Promise<void> => {
-    await apiClient.delete(`/users/${userId}`);
+  changePassword: async (passwordData: ChangePasswordForm): Promise<{ message: string }> => {
+    const response: AxiosResponse<{ message: string }> = await apiClient.post(
+      '/auth/change-password',
+      passwordData
+    );
+    return response.data;
+  },
+
+  deleteAccount: async (): Promise<{ message: string }> => {
+    const response: AxiosResponse<{ message: string }> = await apiClient.delete('/auth/account');
+    return response.data;
   },
 };
 

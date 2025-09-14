@@ -97,9 +97,31 @@ export interface RegisterForm {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
   firstName?: string;
   lastName?: string;
   dateOfBirth?: string;
+}
+
+export interface UpdateProfileForm {
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+}
+
+export interface ChangePasswordForm {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  token: string;
+  user: User;
+  message: string;
 }
 
 export interface SearchFilters {

@@ -6,7 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './hooks/redux';
 import { fetchGenres } from './store/slices/movieSlice';
-import { fetchUserProfile } from './store/slices/authSlice';
+import { fetchCurrentUser } from './store/slices/authSlice';
 
 // Components
 import Navbar from './components/layout/Navbar';
@@ -72,25 +72,17 @@ const theme = createTheme({
 
 const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, token } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Fetch genres on app load
     dispatch(fetchGenres());
 
-    // If user is authenticated, fetch user profile
-    if (isAuthenticated && !user) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Extract user ID from token (you might need to decode JWT)
-        // For now, we'll assume user ID is stored in localStorage
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-          dispatch(fetchUserProfile(parseInt(userId)));
-        }
-      }
+    // If we have a token but no user data, fetch current user
+    if (token && !user) {
+      dispatch(fetchCurrentUser());
     }
-  }, [dispatch, isAuthenticated, user]);
+  }, [dispatch, token, user]);
 
   return (
     <Router>

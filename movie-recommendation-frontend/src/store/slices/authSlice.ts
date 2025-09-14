@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { User, LoginForm, RegisterForm } from '../../types';
+import { User, LoginForm, RegisterForm, UpdateProfileForm, ChangePasswordForm } from '../../types';
 import { authApi } from '../../services/api';
 
 interface AuthState {
@@ -24,19 +24,35 @@ const initialState: AuthState = {
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: LoginForm) => {
-    const response = await authApi.login(credentials);
-    localStorage.setItem('token', response.token);
-    return response;
+  async (credentials: LoginForm, { rejectWithValue }) => {
+    try {
+      const response = await authApi.login(credentials);
+      if (response.success) {
+        localStorage.setItem('token', response.token);
+        return response;
+      } else {
+        return rejectWithValue(response.message);
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
   }
 );
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: RegisterForm) => {
-    const response = await authApi.register(userData);
-    localStorage.setItem('token', response.token);
-    return response;
+  async (userData: RegisterForm, { rejectWithValue }) => {
+    try {
+      const response = await authApi.register(userData);
+      if (response.success) {
+        localStorage.setItem('token', response.token);
+        return response;
+      } else {
+        return rejectWithValue(response.message);
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
   }
 );
 
@@ -48,28 +64,52 @@ export const logout = createAsyncThunk(
   }
 );
 
-export const fetchUserProfile = createAsyncThunk(
-  'auth/fetchProfile',
-  async (userId: number) => {
-    const response = await authApi.getUserProfile(userId);
-    return response;
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authApi.getCurrentUser();
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+    }
   }
 );
 
-export const updateUserProfile = createAsyncThunk(
+export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
-  async ({ userId, userData }: { userId: number; userData: Partial<User> }) => {
-    const response = await authApi.updateUserProfile(userId, userData);
-    return response;
+  async (userData: UpdateProfileForm, { rejectWithValue }) => {
+    try {
+      const response = await authApi.updateProfile(userData);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async (passwordData: ChangePasswordForm, { rejectWithValue }) => {
+    try {
+      const response = await authApi.changePassword(passwordData);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to change password');
+    }
   }
 );
 
 export const deleteAccount = createAsyncThunk(
   'auth/deleteAccount',
-  async (userId: number) => {
-    await authApi.deleteAccount(userId);
-    localStorage.removeItem('token');
-    return null;
+  async (_, { rejectWithValue }) => {
+    try {
+      await authApi.deleteAccount();
+      localStorage.removeItem('token');
+      return null;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete account');
+    }
   }
 );
 
@@ -106,7 +146,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading.isLoading = false;
-        state.loading.error = action.error.message;
+        state.loading.error = action.payload as string;
       })
       // Register
       .addCase(register.pending, (state) => {
@@ -121,7 +161,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.loading.isLoading = false;
-        state.loading.error = action.error.message;
+        state.loading.error = action.payload as string;
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
@@ -129,20 +169,60 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
       })
-      // Fetch user profile
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+      // Fetch current user
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading.isLoading = true;
+        state.loading.error = undefined;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.loading.isLoading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
       })
-      // Update user profile
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.loading.isLoading = false;
+        state.loading.error = action.payload as string;
+        // If token is invalid, clear auth state
+        if (action.payload === 'Invalid token') {
+          state.user = null;
+          state.token = null;
+          state.isAuthenticated = false;
+          localStorage.removeItem('token');
+        }
+      })
+      // Update profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading.isLoading = true;
+        state.loading.error = undefined;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading.isLoading = false;
         state.user = action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading.isLoading = false;
+        state.loading.error = action.payload as string;
+      })
+      // Change password
+      .addCase(changePassword.pending, (state) => {
+        state.loading.isLoading = true;
+        state.loading.error = undefined;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading.isLoading = false;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading.isLoading = false;
+        state.loading.error = action.payload as string;
       })
       // Delete account
       .addCase(deleteAccount.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+      })
+      .addCase(deleteAccount.rejected, (state, action) => {
+        state.loading.error = action.payload as string;
       });
   },
 });
