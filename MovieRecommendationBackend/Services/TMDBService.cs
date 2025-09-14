@@ -48,9 +48,15 @@ public class TMDBService : ITMDBService
         return "{}";
     }
 
-    public async Task<List<MovieDto>> GetPopularMoviesAsync(int page = 1)
+    public async Task<List<MovieDto>> GetPopularMoviesAsync(int page = 1, bool? includeAdult = null)
     {
         var url = $"{_baseUrl}/movie/popular?language=en-US&page={page}";
+        
+        if (includeAdult.HasValue)
+        {
+            url += $"&include_adult={includeAdult.Value.ToString().ToLower()}";
+        }
+        
         _logger.LogInformation("\nMaking TMDB API request to: {Url} {headers} \n", url, JsonConvert.SerializeObject(_httpClient.DefaultRequestHeaders));
 
         string content = await ApiCall(url);
@@ -86,10 +92,16 @@ public class TMDBService : ITMDBService
         return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
     }
 
-    public async Task<List<MovieDto>> SearchMoviesAsync(string query, int page = 1)
+    public async Task<List<MovieDto>> SearchMoviesAsync(string query, int page = 1, bool? includeAdult = null)
     {
         var encodedQuery = Uri.EscapeDataString(query);
         var url = $"{_baseUrl}/search/movie?query={encodedQuery}&page={page}";
+        
+        if (includeAdult.HasValue)
+        {
+            url += $"&include_adult={includeAdult.Value.ToString().ToLower()}";
+        }
+        
         _logger.LogInformation("Making TMDB API search request to: {Url}", url);
 
         string content = await ApiCall(url);
@@ -136,6 +148,154 @@ public class TMDBService : ITMDBService
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
         return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+    }
+
+    public async Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request)
+    {
+        var queryParams = new List<string>();
+        
+        // Add page parameter
+        queryParams.Add($"page={request.Page}");
+        
+        // Add language
+        queryParams.Add("language=en-US");
+        
+        // Add sort by parameter
+        if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            var sortBy = request.SortBy.ToLower() switch
+            {
+                "popularity" => "popularity",
+                "vote_average" => "vote_average",
+                "release_date" => "release_date",
+                "title" => "title",
+                _ => "popularity"
+            };
+            queryParams.Add($"sort_by={sortBy}");
+        }
+        
+        // Add sort order
+        if (!string.IsNullOrWhiteSpace(request.SortOrder))
+        {
+            var sortOrder = request.SortOrder.ToLower() switch
+            {
+                "asc" => "asc",
+                "desc" => "desc",
+                _ => "desc"
+            };
+            queryParams.Add($"sort_order={sortOrder}");
+        }
+        
+        // Add genre filter
+        if (request.Genre.HasValue)
+        {
+            queryParams.Add($"with_genres={request.Genre.Value}");
+        }
+        
+        // Add release date filters
+        if (!string.IsNullOrWhiteSpace(request.ReleaseDateFrom))
+        {
+            queryParams.Add($"primary_release_date.gte={request.ReleaseDateFrom}");
+        }
+        
+        if (!string.IsNullOrWhiteSpace(request.ReleaseDateTo))
+        {
+            queryParams.Add($"primary_release_date.lte={request.ReleaseDateTo}");
+        }
+        
+        // Add year filter
+        if (request.Year.HasValue)
+        {
+            queryParams.Add($"primary_release_year={request.Year.Value}");
+        }
+        
+        // Add language filter
+        if (!string.IsNullOrWhiteSpace(request.Language))
+        {
+            queryParams.Add($"with_original_language={request.Language}");
+        }
+        
+        // Add rating filters
+        if (request.MinRating.HasValue)
+        {
+            queryParams.Add($"vote_average.gte={request.MinRating.Value}");
+        }
+        
+        if (request.MaxRating.HasValue)
+        {
+            queryParams.Add($"vote_average.lte={request.MaxRating.Value}");
+        }
+        
+        // Add runtime filters
+        if (request.MinRuntime.HasValue)
+        {
+            queryParams.Add($"with_runtime.gte={request.MinRuntime.Value}");
+        }
+        
+        if (request.MaxRuntime.HasValue)
+        {
+            queryParams.Add($"with_runtime.lte={request.MaxRuntime.Value}");
+        }
+        
+        // Add adult content filter
+        if (request.Adult.HasValue)
+        {
+            queryParams.Add($"include_adult={request.Adult.Value.ToString().ToLower()}");
+        }
+        
+        // Add certification filter
+        if (!string.IsNullOrWhiteSpace(request.Certification))
+        {
+            queryParams.Add($"certification={request.Certification}");
+        }
+        
+        // Handle text search - if query is provided, use search endpoint instead
+        if (!string.IsNullOrWhiteSpace(request.Query))
+        {
+            // For text search, we'll use the search endpoint but apply other filters
+            var searchUrl = $"{_baseUrl}/search/movie?query={Uri.EscapeDataString(request.Query)}&page={request.Page}&language=en-US";
+            
+            if (request.Adult.HasValue)
+            {
+                searchUrl += $"&include_adult={request.Adult.Value.ToString().ToLower()}";
+            }
+            
+            string content = await ApiCall(searchUrl);
+            var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
+            var movies = result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+            
+            // Apply additional filters on the search results
+            return ApplyClientSideFilters(movies, request);
+        }
+        
+        // Build the discover URL
+        var discoverUrl = $"{_baseUrl}/discover/movie?{string.Join("&", queryParams)}";
+        
+        string discoverContent = await ApiCall(discoverUrl);
+        var discoverResult = JsonConvert.DeserializeObject<TMDBResponse>(discoverContent);
+        
+        return discoverResult?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+    }
+    
+    private static List<MovieDto> ApplyClientSideFilters(List<MovieDto> movies, DiscoverMoviesRequest request)
+    {
+        var filteredMovies = movies.AsEnumerable();
+        
+        // Apply runtime filters (if not handled by TMDB API)
+        if (request.MinRuntime.HasValue || request.MaxRuntime.HasValue)
+        {
+            filteredMovies = filteredMovies.Where(m => 
+                (!request.MinRuntime.HasValue || (m.Runtime ?? 0) >= request.MinRuntime.Value) &&
+                (!request.MaxRuntime.HasValue || (m.Runtime ?? 0) <= request.MaxRuntime.Value));
+        }
+        
+        // Apply certification filter (if not handled by TMDB API)
+        if (!string.IsNullOrWhiteSpace(request.Certification))
+        {
+            filteredMovies = filteredMovies.Where(m => m.Certification == request.Certification);
+        }
+        
+        return filteredMovies.ToList();
     }
 
     private static MovieDto MapToMovieDto(TMDBMovie movie)

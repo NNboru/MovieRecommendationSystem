@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -35,6 +35,7 @@ const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
     searchResults,
@@ -99,6 +100,13 @@ const SearchPage: React.FC = () => {
     }
   }, [searchParams, dispatch]);
 
+  // Auto-focus the search input when component mounts
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (localQuery.trim() || hasActiveFilters()) {
@@ -159,7 +167,9 @@ const SearchPage: React.FC = () => {
 
   const hasActiveFilters = () => {
     return !!(localFilters.genre || localFilters.releaseDateFrom || localFilters.releaseDateTo ||
-      localFilters.language || localFilters.minRating || localFilters.maxRating);
+      localFilters.language || localFilters.minRating || localFilters.maxRating ||
+      localFilters.year || localFilters.minRuntime || localFilters.maxRuntime ||
+      localFilters.adult !== undefined || localFilters.certification);
   };
 
   const getActiveFiltersCount = () => {
@@ -168,15 +178,19 @@ const SearchPage: React.FC = () => {
     if (localFilters.releaseDateFrom || localFilters.releaseDateTo) count++;
     if (localFilters.language) count++;
     if (localFilters.minRating || localFilters.maxRating) count++;
+    if (localFilters.year) count++;
+    if (localFilters.minRuntime || localFilters.maxRuntime) count++;
+    if (localFilters.adult !== undefined) count++;
+    if (localFilters.certification) count++;
     return count;
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 4 }}>
       {/* Search Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ mb: 3, fontWeight: 'bold' }}>
-          Search Movies
+        <Typography variant="h4" component="h1" sx={{ mb: 3, fontWeight: 'bold', width: '94vw' }}>
+          
         </Typography>
 
           {/* Search Form */}
@@ -198,6 +212,7 @@ const SearchPage: React.FC = () => {
             placeholder="Search for movies or use filters below..."
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
+            inputRef={searchInputRef}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -303,6 +318,44 @@ const SearchPage: React.FC = () => {
                 variant="outlined"
               />
             )}
+            {localFilters.year && (
+              <Chip
+                label={`Year: ${localFilters.year}`}
+                onDelete={() => handleFilterChange('year', undefined)}
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {(localFilters.minRuntime || localFilters.maxRuntime) && (
+              <Chip
+                label={`Runtime: ${localFilters.minRuntime || 0} - ${localFilters.maxRuntime || 300} min`}
+                onDelete={() => {
+                  setLocalFilters(prev => ({
+                    ...prev,
+                    minRuntime: undefined,
+                    maxRuntime: undefined,
+                  }));
+                }}
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {localFilters.adult !== undefined && (
+              <Chip
+                label={`Content: ${localFilters.adult ? 'Adult' : 'Family Friendly'}`}
+                onDelete={() => handleFilterChange('adult', undefined)}
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {localFilters.certification && (
+              <Chip
+                label={`Cert: ${localFilters.certification}`}
+                onDelete={() => handleFilterChange('certification', undefined)}
+                color="primary"
+                variant="outlined"
+              />
+            )}
           </Box>
         )}
       </Box>
@@ -396,6 +449,88 @@ const SearchPage: React.FC = () => {
                       marks={[...Array(6).keys()].map(i => ({ value: i * 2, label: i * 2 }))}
                   />
                 </Box>
+
+                {/* Year Filter */}
+                <FormControl fullWidth>
+                  <InputLabel>Year</InputLabel>
+                  <Select
+                    value={localFilters.year?.toString() || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const year = value ? Number(value) : undefined;
+                      handleFilterChange('year', year);
+                    }}
+                    label="Year"
+                  >
+                    <MenuItem value="">Any Year</MenuItem>
+                    {Array.from({ length: 50 }, (_, i) => 2024 - i).map(year => (
+                      <MenuItem key={year} value={year.toString()}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Runtime Filter */}
+                <Box>
+                  <Typography gutterBottom>Runtime (minutes)</Typography>
+                  <Slider
+                    value={[localFilters.minRuntime || 0, localFilters.maxRuntime || 300]}
+                    onChange={(_, newValue) => {
+                      const [min, max] = newValue as number[];
+                      setLocalFilters(prev => ({
+                        ...prev,
+                        minRuntime: min,
+                        maxRuntime: max,
+                      }));
+                    }}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={300}
+                    step={15}
+                    marks={[
+                      { value: 0, label: '0m' },
+                      { value: 90, label: '90m' },
+                      { value: 180, label: '180m' },
+                      { value: 300, label: '300m' },
+                    ]}
+                  />
+                </Box>
+
+                {/* Adult Content Filter */}
+                <FormControl fullWidth>
+                  <InputLabel>Content Rating</InputLabel>
+                  <Select
+                    value={localFilters.adult === undefined ? '' : localFilters.adult.toString()}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const adult = value === '' ? undefined : value === 'true';
+                      handleFilterChange('adult', adult);
+                    }}
+                    label="Content Rating"
+                  >
+                    <MenuItem value="">Any Content</MenuItem>
+                    <MenuItem value="false">Family Friendly</MenuItem>
+                    <MenuItem value="true">Adult Content</MenuItem>
+                  </Select>
+                </FormControl>
+
+                {/* Certification Filter */}
+                <FormControl fullWidth>
+                  <InputLabel>Certification</InputLabel>
+                  <Select
+                    value={localFilters.certification || ''}
+                    onChange={(e) => handleFilterChange('certification', e.target.value || undefined)}
+                    label="Certification"
+                  >
+                    <MenuItem value="">Any Certification</MenuItem>
+                    <MenuItem value="G">G - General Audiences</MenuItem>
+                    <MenuItem value="PG">PG - Parental Guidance</MenuItem>
+                    <MenuItem value="PG-13">PG-13 - Parents Strongly Cautioned</MenuItem>
+                    <MenuItem value="R">R - Restricted</MenuItem>
+                    <MenuItem value="NC-17">NC-17 - Adults Only</MenuItem>
+                  </Select>
+                </FormControl>
 
                 {/* Sort Options */}
                 <FormControl fullWidth>

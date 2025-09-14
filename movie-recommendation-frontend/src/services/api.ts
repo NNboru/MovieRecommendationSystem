@@ -83,6 +83,11 @@ export const movieApi = {
     if (filters.language) params.append('language', filters.language);
     if (filters.minRating) params.append('minRating', filters.minRating.toString());
     if (filters.maxRating) params.append('maxRating', filters.maxRating.toString());
+    if (filters.year) params.append('year', filters.year.toString());
+    if (filters.minRuntime) params.append('minRuntime', filters.minRuntime.toString());
+    if (filters.maxRuntime) params.append('maxRuntime', filters.maxRuntime.toString());
+    if (filters.adult !== undefined) params.append('adult', filters.adult.toString());
+    if (filters.certification) params.append('certification', filters.certification);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
     

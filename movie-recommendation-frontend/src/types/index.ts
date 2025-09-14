@@ -110,6 +110,11 @@ export interface SearchFilters {
   language?: string;
   minRating?: number;
   maxRating?: number;
+  year?: number;
+  minRuntime?: number;
+  maxRuntime?: number;
+  adult?: boolean;
+  certification?: string;
   sortBy?: 'popularity' | 'vote_average' | 'release_date' | 'title';
   sortOrder?: 'asc' | 'desc';
 }

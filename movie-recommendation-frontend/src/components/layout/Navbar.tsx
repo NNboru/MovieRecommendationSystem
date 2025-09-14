@@ -32,7 +32,6 @@ const Navbar: React.FC = () => {
   const { } = useAppSelector((state) => state.ui);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -48,13 +47,6 @@ const Navbar: React.FC = () => {
     handleMenuClose();
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
 
   // const handleSearchModalToggle = () => {
   //   dispatch(toggleSearchModal());
@@ -107,8 +99,7 @@ const Navbar: React.FC = () => {
 
         {/* Search Bar */}
         <Box
-          component="form"
-          onSubmit={handleSearch}
+          onClick={() => navigate('/search')}
           sx={{
             position: 'relative',
             borderRadius: 1,
@@ -119,7 +110,11 @@ const Navbar: React.FC = () => {
             marginRight: 2,
             marginLeft: 0,
             width: '100%',
-            maxWidth: 300,
+            maxWidth: 200,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 8px 8px 40px',
           }}
         >
           <Box
@@ -131,23 +126,21 @@ const Navbar: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              left: 0,
             }}
           >
             <SearchIcon />
           </Box>
-          <InputBase
-            placeholder="Search movies..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+          <Typography
             sx={{
               color: 'inherit',
-              '& .MuiInputBase-input': {
-                padding: '8px 8px 8px 40px',
-                transition: 'width 0.2s',
-                width: '100%',
-              },
+              opacity: 0.7,
+              fontSize: '14px',
+              pl: '8px'
             }}
-          />
+          >
+            Search movies...
+          </Typography>
         </Box>
 
         {/* User Menu */}

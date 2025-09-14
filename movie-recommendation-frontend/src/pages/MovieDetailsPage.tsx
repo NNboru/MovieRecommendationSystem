@@ -127,7 +127,7 @@ const MovieDetailsPage: React.FC = () => {
 
   if (error || !movie) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth={false} sx={{ py: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error || 'Movie not found'}
         </Alert>
@@ -164,7 +164,7 @@ const MovieDetailsPage: React.FC = () => {
             },
           }}
         >
-          <Container maxWidth="lg" sx={{ position: 'relative', height: '100%' }}>
+          <Container maxWidth={false} sx={{ position: 'relative', height: '100%' }}>
             <Box
               sx={{
                 position: 'absolute',
@@ -211,7 +211,7 @@ const MovieDetailsPage: React.FC = () => {
         </Box>
       )}
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth={false} sx={{ py: 4 }}>
         <Box
           sx={{
             display: 'grid',

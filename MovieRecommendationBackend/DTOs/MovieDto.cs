@@ -15,6 +15,8 @@ public class MovieDto
     public string? OriginalLanguage { get; set; }
     public string? OriginalTitle { get; set; }
     public double? Popularity { get; set; }
+    public int? Runtime { get; set; }
+    public string? Certification { get; set; }
     public List<string> Genres { get; set; } = new List<string>();
     public double? UserRating { get; set; }
     public DateTime CreatedAt { get; set; }

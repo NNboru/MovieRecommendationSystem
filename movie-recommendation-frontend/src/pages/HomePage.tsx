@@ -36,7 +36,7 @@ const HomePage: React.FC = () => {
 
   if (loading.isLoading && !trendingMovies.length) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+      <Container maxWidth={false} sx={{ py: 4, textAlign: 'center' }}>
         <CircularProgress size={60} />
         <Typography variant="h6" sx={{ mt: 2 }}>
           Loading movies...
@@ -50,7 +50,7 @@ const HomePage: React.FC = () => {
       {/* Hero Section */}
       <HeroSection movies={trendingMovies.slice(0, 5)} />
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }} maxWidth={false}>
         {/* Trending Movies */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>

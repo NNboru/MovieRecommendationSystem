@@ -141,83 +141,39 @@ public class MoviesController : ControllerBase
         [FromQuery] string? language,
         [FromQuery] double? minRating,
         [FromQuery] double? maxRating,
+        [FromQuery] int? year,
+        [FromQuery] int? minRuntime,
+        [FromQuery] int? maxRuntime,
+        [FromQuery] bool? adult,
+        [FromQuery] string? certification,
         [FromQuery] string? sortBy,
         [FromQuery] string? sortOrder,
         [FromQuery] int page = 1)
     {
         try
         {
-            List<MovieDto> movies;
-            
-            if (!string.IsNullOrWhiteSpace(q))
+            // Create the discover request with all filters
+            var discoverRequest = new DiscoverMoviesRequest
             {
-                // Text search
-                movies = await _tmdbService.SearchMoviesAsync(q, page);
-            }
-            else if (genre.HasValue)
-            {
-                // Genre-based search
-                movies = await _tmdbService.GetMoviesByGenreAsync(genre.Value, page);
-            }
-            else
-            {
-                // Default to popular movies if no search criteria
-                movies = await _tmdbService.GetPopularMoviesAsync(page);
-            }
+                Query = q,
+                Genre = genre,
+                ReleaseDateFrom = releaseDateFrom,
+                ReleaseDateTo = releaseDateTo,
+                Language = language,
+                MinRating = minRating,
+                MaxRating = maxRating,
+                Year = year,
+                MinRuntime = minRuntime,
+                MaxRuntime = maxRuntime,
+                Adult = adult,
+                Certification = certification,
+                SortBy = sortBy,
+                SortOrder = sortOrder,
+                Page = page
+            };
 
-            // Apply additional filters if provided
-            if (!string.IsNullOrWhiteSpace(releaseDateFrom))
-            {
-                movies = movies.Where(m => m.ReleaseDate != null && m.ReleaseDate.CompareTo(releaseDateFrom) >= 0).ToList();
-            }
-            
-            if (!string.IsNullOrWhiteSpace(releaseDateTo))
-            {
-                movies = movies.Where(m => m.ReleaseDate != null && m.ReleaseDate.CompareTo(releaseDateTo) <= 0).ToList();
-            }
-            
-            if (!string.IsNullOrWhiteSpace(language))
-            {
-                movies = movies.Where(m => m.OriginalLanguage == language).ToList();
-            }
-            
-            if (minRating.HasValue)
-            {
-                movies = movies.Where(m => m.VoteAverage >= minRating.Value).ToList();
-            }
-            
-            if (maxRating.HasValue)
-            {
-                movies = movies.Where(m => m.VoteAverage <= maxRating.Value).ToList();
-            }
-
-            // Apply sorting
-            if (!string.IsNullOrWhiteSpace(sortBy))
-            {
-                switch (sortBy.ToLower())
-                {
-                    case "popularity":
-                        movies = sortOrder == "desc" 
-                            ? movies.OrderByDescending(m => m.Popularity).ToList()
-                            : movies.OrderBy(m => m.Popularity).ToList();
-                        break;
-                    case "vote_average":
-                        movies = sortOrder == "desc"
-                            ? movies.OrderByDescending(m => m.VoteAverage).ToList()
-                            : movies.OrderBy(m => m.VoteAverage).ToList();
-                        break;
-                    case "release_date":
-                        movies = sortOrder == "desc"
-                            ? movies.OrderByDescending(m => m.ReleaseDate).ToList()
-                            : movies.OrderBy(m => m.ReleaseDate).ToList();
-                        break;
-                    case "title":
-                        movies = sortOrder == "desc"
-                            ? movies.OrderByDescending(m => m.Title).ToList()
-                            : movies.OrderBy(m => m.Title).ToList();
-                        break;
-                }
-            }
+            // Use the discover endpoint for all search functionality
+            var movies = await _tmdbService.DiscoverMoviesAsync(discoverRequest);
 
             return Ok(CreateUIResponse(movies));
         }
