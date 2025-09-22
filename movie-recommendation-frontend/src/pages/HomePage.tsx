@@ -61,12 +61,13 @@ const HomePage: React.FC = () => {
               {loading.error}
             </Alert>
           ) : (
-            <MovieList
-              movies={trendingMovies}
-              loading={loading.isLoading}
-              showWatchlistButton={true}
-              onMovieClick={handleMovieClick}
-            />
+          <MovieList
+            movies={trendingMovies}
+            loading={loading.isLoading}
+            showWatchlistButton={true}
+            showLikeButtons={true}
+            onMovieClick={handleMovieClick}
+          />
           )}
         </Box>
 
@@ -79,6 +80,7 @@ const HomePage: React.FC = () => {
             movies={popularMovies}
             loading={loading.isLoading}
             showWatchlistButton={true}
+            showLikeButtons={true}
             onMovieClick={handleMovieClick}
           />
         </Box>
@@ -92,6 +94,7 @@ const HomePage: React.FC = () => {
             movies={topRatedMovies}
             loading={loading.isLoading}
             showWatchlistButton={true}
+            showLikeButtons={true}
             onMovieClick={handleMovieClick}
           />
         </Box>

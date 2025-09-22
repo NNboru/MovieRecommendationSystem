@@ -9,7 +9,9 @@ import {
   ChangePasswordForm,
   AuthResponse,
   SearchFilters,
-  PaginatedResponse
+  PaginatedResponse,
+  LikeListItem,
+  LikeStatus,
 } from '../types';
 
 // API Configuration
@@ -183,6 +185,32 @@ export const authApi = {
 
   deleteAccount: async (): Promise<{ message: string }> => {
     const response: AxiosResponse<{ message: string }> = await apiClient.delete('/auth/account');
+    return response.data;
+  },
+};
+
+// LikeList API
+export const likeListApi = {
+  getLikeList: async (): Promise<LikeListItem[]> => {
+    const response: AxiosResponse<LikeListItem[]> = await apiClient.get('/likelist/getLikeList');
+    return response.data;
+  },
+
+  addToLikeList: async (movieId: number, status: LikeStatus): Promise<LikeListItem> => {
+    const response: AxiosResponse<LikeListItem> = await apiClient.post('/likelist/addToLikeList', {
+      MovieId: movieId,
+      Status: status,
+    });
+    return response.data;
+  },
+
+  removeFromLikeList: async (movieId: number): Promise<{ message: string }> => {
+    const response: AxiosResponse<{ message: string }> = await apiClient.delete(`/likelist/${movieId}`);
+    return response.data;
+  },
+
+  checkLikeStatus: async (movieId: number): Promise<{ status: string }> => {
+    const response: AxiosResponse<{ status: string }> = await apiClient.get(`/likelist/checkLikeStatus/${movieId}`);
     return response.data;
   },
 };

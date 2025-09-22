@@ -3,6 +3,7 @@ import movieReducer from './slices/movieSlice';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import watchlistReducer from './slices/watchlistSlice';
+import likeListReducer from './slices/likeListSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     auth: authReducer,
     ui: uiReducer,
     watchlist: watchlistReducer,
+    likeList: likeListReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

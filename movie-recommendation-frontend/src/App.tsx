@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from './hooks/redux';
 import { fetchGenres } from './store/slices/movieSlice';
 import { fetchCurrentUser } from './store/slices/authSlice';
 import { fetchWatchlist } from './store/slices/watchlistSlice';
+import { fetchLikeList } from './store/slices/likeListSlice';
 
 // Components
 import Navbar from './components/layout/Navbar';
@@ -18,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import WatchlistPage from './pages/WatchlistPage';
+import LikeListPage from './pages/LikeListPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import NotificationContainer from './components/ui/NotificationContainer';
 
@@ -86,9 +88,10 @@ const AppContent: React.FC = () => {
   }, [dispatch, token, user]);
 
   useEffect(() => {
-    // Fetch watchlist when user is authenticated
+    // Fetch watchlist and like list when user is authenticated
     if (isAuthenticated && user) {
       dispatch(fetchWatchlist());
+      dispatch(fetchLikeList());
     }
   }, [dispatch, isAuthenticated, user]);
 
@@ -118,6 +121,14 @@ const AppContent: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <WatchlistPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/likelist"
+                element={
+                  <ProtectedRoute>
+                    <LikeListPage />
                   </ProtectedRoute>
                 }
               />

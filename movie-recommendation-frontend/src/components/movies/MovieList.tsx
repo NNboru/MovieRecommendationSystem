@@ -14,6 +14,7 @@ const MovieList: React.FC<MovieListProps> = ({
   loading = false,
   onMovieClick,
   showWatchlistButton = false,
+  showLikeButtons = false,
 }) => {
   if (loading) {
     return (
@@ -58,6 +59,7 @@ const MovieList: React.FC<MovieListProps> = ({
             movie={movie}
             onMovieClick={onMovieClick}
             showWatchlistButton={showWatchlistButton}
+            showLikeButtons={showLikeButtons}
           />
         ))}
       </Box>

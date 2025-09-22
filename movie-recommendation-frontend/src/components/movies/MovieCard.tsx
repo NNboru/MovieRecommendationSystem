@@ -20,11 +20,14 @@ import {
 } from '@mui/icons-material';
 import { Movie, MovieCardProps } from '../../types';
 import WatchlistButton from './WatchlistButton';
+import LikeButton from './LikeButton';
+import DislikeButton from './DislikeButton';
 
 const MovieCard: React.FC<MovieCardProps> = ({
   movie,
   onMovieClick,
   showWatchlistButton = false,
+  showLikeButtons = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -116,20 +119,49 @@ const MovieCard: React.FC<MovieCardProps> = ({
           </IconButton>
         </Box>
 
-        {/* Watchlist Button */}
-        {showWatchlistButton && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              borderRadius: '50%',
-            }}
-          >
-            <WatchlistButton movie={movie} size="small" showTooltip={true} />
-          </Box>
-        )}
+        {/* Action Buttons */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          {showWatchlistButton && (
+            <Box
+              sx={{
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                borderRadius: '50%',
+              }}
+            >
+              <WatchlistButton movie={movie} size="small" showTooltip={true} />
+            </Box>
+          )}
+          
+          {showLikeButtons && (
+            <>
+              <Box
+                sx={{
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  borderRadius: '50%',
+                }}
+              >
+                <LikeButton movie={movie} size="small" showTooltip={true} />
+              </Box>
+              <Box
+                sx={{
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  borderRadius: '50%',
+                }}
+              >
+                <DislikeButton movie={movie} size="small" showTooltip={true} />
+              </Box>
+            </>
+          )}
+        </Box>
 
         {/* Rating Badge */}
         {movie.voteAverage && movie.voteAverage > 0 && (

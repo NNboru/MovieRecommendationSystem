@@ -1,3 +1,11 @@
+// Enums
+export const LikeStatus = {
+  Liked: 1,
+  Disliked: 2
+} as const;
+
+export type LikeStatus = typeof LikeStatus[keyof typeof LikeStatus];
+
 // Movie related types
 export interface Movie {
   id: number;
@@ -149,6 +157,7 @@ export interface MovieCardProps {
   onRemoveFromWatchlist?: (movie: Movie) => void;
   isInWatchlist?: boolean;
   showWatchlistButton?: boolean;
+  showLikeButtons?: boolean;
 }
 
 export interface MovieListProps {
@@ -157,6 +166,7 @@ export interface MovieListProps {
   loading?: boolean;
   onMovieClick?: (movie: Movie) => void;
   showWatchlistButton?: boolean;
+  showLikeButtons?: boolean;
 }
 
 export interface SearchBarProps {
@@ -171,4 +181,19 @@ export interface FilterPanelProps {
   genres: Genre[];
   onApplyFilters: () => void;
   onClearFilters: () => void;
+}
+
+// LikeList related types
+export interface LikeListItem {
+  id: number;
+  movieId: number;
+  movie: Movie;
+  status: LikeStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddToLikeListRequest {
+  MovieId: number;
+  Status: LikeStatus;
 }

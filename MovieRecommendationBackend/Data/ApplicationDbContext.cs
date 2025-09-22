@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<Watchlist> Watchlists { get; set; }
+    public DbSet<LikeList> LikeLists { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,9 +61,27 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(w => w.MovieId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Configure LikeList relationships
+        modelBuilder.Entity<LikeList>()
+            .HasOne(l => l.User)
+            .WithMany(u => u.LikeLists)
+            .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LikeList>()
+            .HasOne(l => l.Movie)
+            .WithMany(m => m.LikeLists)
+            .HasForeignKey(l => l.MovieId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Ensure unique constraint for watchlist (one user can only have one entry per movie)
         modelBuilder.Entity<Watchlist>()
             .HasIndex(w => new { w.UserId, w.MovieId })
+            .IsUnique();
+
+        // Ensure unique constraint for like list (one user can only have one entry per movie)
+        modelBuilder.Entity<LikeList>()
+            .HasIndex(l => new { l.UserId, l.MovieId })
             .IsUnique();
 
         // Ensure unique constraints

@@ -85,15 +85,26 @@ const Navbar: React.FC = () => {
             Home
           </Button>
           {isAuthenticated && (
-            <Button
-              color="inherit"
-              onClick={() => navigate('/watchlist')}
-              sx={{
-                backgroundColor: isActive('/watchlist') ? alpha('#fff', 0.1) : 'transparent',
-              }}
-            >
-              Watchlist
-            </Button>
+            <>
+              <Button
+                color="inherit"
+                onClick={() => navigate('/watchlist')}
+                sx={{
+                  backgroundColor: isActive('/watchlist') ? alpha('#fff', 0.1) : 'transparent',
+                }}
+              >
+                Watchlist
+              </Button>
+              <Button
+                color="inherit"
+                onClick={() => navigate('/likelist')}
+                sx={{
+                  backgroundColor: isActive('/likelist') ? alpha('#fff', 0.1) : 'transparent',
+                }}
+              >
+                My Likes
+              </Button>
+            </>
           )}
         </Box>
 
