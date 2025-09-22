@@ -13,7 +13,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Genre> Genres { get; set; }
     public DbSet<MovieGenre> MovieGenres { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<Rating> Ratings { get; set; }
     public DbSet<Watchlist> Watchlists { get; set; }
     public DbSet<LikeList> LikeLists { get; set; }
 
@@ -35,18 +34,6 @@ public class ApplicationDbContext : DbContext
             .WithMany(g => g.MovieGenres)
             .HasForeignKey(mg => mg.GenreId);
 
-        // Configure Rating relationships
-        modelBuilder.Entity<Rating>()
-            .HasOne(r => r.User)
-            .WithMany(u => u.Ratings)
-            .HasForeignKey(r => r.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Rating>()
-            .HasOne(r => r.Movie)
-            .WithMany(m => m.Ratings)
-            .HasForeignKey(r => r.MovieId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure Watchlist relationships
         modelBuilder.Entity<Watchlist>()

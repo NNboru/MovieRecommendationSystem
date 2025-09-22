@@ -28,7 +28,6 @@ public class User
     public DateTime? DateOfBirth { get; set; }
     
     // Navigation properties
-    public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     public ICollection<Watchlist> Watchlists { get; set; } = new List<Watchlist>();
     public ICollection<LikeList> LikeLists { get; set; } = new List<LikeList>();
     

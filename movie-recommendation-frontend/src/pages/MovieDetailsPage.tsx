@@ -18,16 +18,12 @@ import {
 } from '@mui/material';
 import {
   ArrowBack,
-  Star,
-  StarBorder,
   PlayArrow,
-  Add,
-  Remove,
   Share,
   BookmarkAdd,
   BookmarkRemove,
 } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../hooks/redux';
+import { useAppSelector } from '../hooks/redux';
 import { movieApi } from '../services/api';
 import { Movie, PaginatedResponse } from '../types';
 import MovieList from '../components/movies/MovieList';
@@ -35,7 +31,6 @@ import MovieList from '../components/movies/MovieList';
 const MovieDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +102,6 @@ const MovieDetailsPage: React.FC = () => {
       navigate('/login');
       return;
     }
-    // TODO: Implement add to watchlist functionality
     setIsInWatchlist(!isInWatchlist);
   };
 

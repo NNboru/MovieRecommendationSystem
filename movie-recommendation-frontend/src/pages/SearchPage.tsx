@@ -118,7 +118,6 @@ const SearchPage: React.FC = () => {
 
   const handleFilterChange = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
     const newFilters = { ...localFilters, [key]: value };
-    console.log(newFilters);
     setLocalFilters(newFilters);
     setCurrentPage(1);
   };

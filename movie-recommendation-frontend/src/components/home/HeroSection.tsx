@@ -52,7 +52,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ movies }) => {
   };
 
   const handleAddToWatchlist = () => {
-    // TODO: Implement add to watchlist functionality
   };
 
   return (

@@ -40,7 +40,6 @@ public class Movie
     
     // Navigation properties
     public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
-    public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     public ICollection<Watchlist> Watchlists { get; set; } = new List<Watchlist>();
     public ICollection<LikeList> LikeLists { get; set; } = new List<LikeList>();
     
