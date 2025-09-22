@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
         >
           <MovieIcon sx={{ mr: 1 }} />
           <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-            MovieRec
+            Binge
           </Typography>
         </Box>
 

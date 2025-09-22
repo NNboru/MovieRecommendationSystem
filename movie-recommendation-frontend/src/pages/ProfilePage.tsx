@@ -9,7 +9,6 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Grid,
   Divider,
   Dialog,
   DialogTitle,
@@ -144,8 +143,8 @@ const ProfilePage: React.FC = () => {
         </Typography>
 
         <Box component="form" onSubmit={handleUpdateProfile}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Username"
@@ -155,8 +154,8 @@ const ProfilePage: React.FC = () => {
                 margin="normal"
                 required
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Email"
@@ -167,8 +166,8 @@ const ProfilePage: React.FC = () => {
                 margin="normal"
                 required
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="First Name"
@@ -177,8 +176,8 @@ const ProfilePage: React.FC = () => {
                 onChange={handleProfileChange}
                 margin="normal"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Last Name"
@@ -187,8 +186,8 @@ const ProfilePage: React.FC = () => {
                 onChange={handleProfileChange}
                 margin="normal"
               />
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box sx={{ flex: '1 1 100%' }}>
               <TextField
                 fullWidth
                 label="Date of Birth"
@@ -201,16 +200,16 @@ const ProfilePage: React.FC = () => {
                   shrink: true,
                 }}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Button
             type="submit"
             variant="contained"
             sx={{ mt: 3 }}
-            disabled={loading.isLoading}
+            disabled={loading}
           >
-            {loading.isLoading ? <CircularProgress size={24} /> : 'Update Profile'}
+            {loading ? <CircularProgress size={24} /> : 'Update Profile'}
           </Button>
         </Box>
       </Paper>
@@ -228,8 +227,8 @@ const ProfilePage: React.FC = () => {
         )}
 
         <Box component="form" onSubmit={handleChangePassword}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ flex: '1 1 100%' }}>
               <TextField
                 fullWidth
                 label="Current Password"
@@ -240,8 +239,8 @@ const ProfilePage: React.FC = () => {
                 margin="normal"
                 required
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="New Password"
@@ -252,8 +251,8 @@ const ProfilePage: React.FC = () => {
                 margin="normal"
                 required
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Confirm New Password"
@@ -264,16 +263,16 @@ const ProfilePage: React.FC = () => {
                 margin="normal"
                 required
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Button
             type="submit"
             variant="contained"
             sx={{ mt: 3 }}
-            disabled={loading.isLoading}
+            disabled={loading}
           >
-            {loading.isLoading ? <CircularProgress size={24} /> : 'Change Password'}
+            {loading ? <CircularProgress size={24} /> : 'Change Password'}
           </Button>
         </Box>
       </Paper>
@@ -290,7 +289,7 @@ const ProfilePage: React.FC = () => {
           variant="contained"
           color="error"
           onClick={handleDeleteAccount}
-          disabled={loading.isLoading}
+          disabled={loading}
         >
           Delete Account
         </Button>

@@ -10,7 +10,6 @@ import {
   Alert,
   Link,
   CircularProgress,
-  Grid,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { register, clearError } from '../store/slices/authSlice';
@@ -102,8 +101,8 @@ const RegisterPage: React.FC = () => {
         )}
 
         <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Username"
@@ -114,8 +113,8 @@ const RegisterPage: React.FC = () => {
                 required
                 autoComplete="username"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Email"
@@ -127,8 +126,8 @@ const RegisterPage: React.FC = () => {
                 required
                 autoComplete="email"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="First Name"
@@ -138,8 +137,8 @@ const RegisterPage: React.FC = () => {
                 margin="normal"
                 autoComplete="given-name"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Last Name"
@@ -149,8 +148,8 @@ const RegisterPage: React.FC = () => {
                 margin="normal"
                 autoComplete="family-name"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Password"
@@ -162,8 +161,8 @@ const RegisterPage: React.FC = () => {
                 required
                 autoComplete="new-password"
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%' } }}>
               <TextField
                 fullWidth
                 label="Confirm Password"
@@ -175,8 +174,8 @@ const RegisterPage: React.FC = () => {
                 required
                 autoComplete="new-password"
               />
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box sx={{ flex: '1 1 100%' }}>
               <TextField
                 fullWidth
                 label="Date of Birth"
@@ -189,17 +188,17 @@ const RegisterPage: React.FC = () => {
                   shrink: true,
                 }}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
-            disabled={loading.isLoading}
+            disabled={loading}
           >
-            {loading.isLoading ? (
+            {loading ? (
               <CircularProgress size={24} />
             ) : (
               'Create Account'

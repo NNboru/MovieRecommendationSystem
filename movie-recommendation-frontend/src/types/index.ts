@@ -8,7 +8,7 @@ export interface Movie {
   voteCount?: number;
   posterPath?: string;
   backdropPath?: string;
-  tmdbId?: number;
+  tmdbId: number;
   isAdult: boolean;
   originalLanguage?: string;
   originalTitle?: string;

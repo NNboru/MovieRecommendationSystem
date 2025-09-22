@@ -13,21 +13,17 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import {
-  Favorite,
-  FavoriteBorder,
   PlayArrow,
   Info,
   Star,
   CalendarToday,
 } from '@mui/icons-material';
 import { Movie, MovieCardProps } from '../../types';
+import WatchlistButton from './WatchlistButton';
 
 const MovieCard: React.FC<MovieCardProps> = ({
   movie,
   onMovieClick,
-  onAddToWatchlist,
-  onRemoveFromWatchlist,
-  isInWatchlist = false,
   showWatchlistButton = false,
 }) => {
   const theme = useTheme();
@@ -40,14 +36,6 @@ const MovieCard: React.FC<MovieCardProps> = ({
     }
   };
 
-  const handleWatchlistToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isInWatchlist && onRemoveFromWatchlist) {
-      onRemoveFromWatchlist(movie);
-    } else if (!isInWatchlist && onAddToWatchlist) {
-      onAddToWatchlist(movie);
-    }
-  };
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -130,21 +118,17 @@ const MovieCard: React.FC<MovieCardProps> = ({
 
         {/* Watchlist Button */}
         {showWatchlistButton && (
-          <IconButton
-            onClick={handleWatchlistToggle}
+          <Box
             sx={{
               position: 'absolute',
               top: 8,
               right: 8,
               backgroundColor: 'rgba(0,0,0,0.6)',
-              color: isInWatchlist ? 'error.main' : 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.8)',
-              },
+              borderRadius: '50%',
             }}
           >
-            {isInWatchlist ? <Favorite /> : <FavoriteBorder />}
-          </IconButton>
+            <WatchlistButton movie={movie} size="small" showTooltip={true} />
+          </Box>
         )}
 
         {/* Rating Badge */}

@@ -7,6 +7,7 @@ import { store } from './store';
 import { useAppDispatch, useAppSelector } from './hooks/redux';
 import { fetchGenres } from './store/slices/movieSlice';
 import { fetchCurrentUser } from './store/slices/authSlice';
+import { fetchWatchlist } from './store/slices/watchlistSlice';
 
 // Components
 import Navbar from './components/layout/Navbar';
@@ -84,13 +85,20 @@ const AppContent: React.FC = () => {
     }
   }, [dispatch, token, user]);
 
+  useEffect(() => {
+    // Fetch watchlist when user is authenticated
+    if (isAuthenticated && user) {
+      dispatch(fetchWatchlist());
+    }
+  }, [dispatch, isAuthenticated, user]);
+
   return (
     <Router>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <div className="App">
           <Navbar />
-          <main style={{ paddingTop: '64px' }}>
+          <main style={{ paddingTop: '64px', width: '99vw' }}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />

@@ -6,19 +6,16 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   token: string | null;
-  loading: {
-    isLoading: boolean;
-    error?: string;
-  };
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   token: localStorage.getItem('token'),
-  loading: {
-    isLoading: false,
-  },
+  loading: false,
+  error: null,
 };
 
 // Async thunks
@@ -118,7 +115,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearError: (state) => {
-      state.loading.error = undefined;
+      state.error = null;
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
@@ -135,33 +132,33 @@ const authSlice = createSlice({
     builder
       // Login
       .addCase(login.pending, (state) => {
-        state.loading.isLoading = true;
-        state.loading.error = undefined;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
-        state.loading.isLoading = false;
-        state.loading.error = action.payload as string;
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Register
       .addCase(register.pending, (state) => {
-        state.loading.isLoading = true;
-        state.loading.error = undefined;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(register.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
       })
       .addCase(register.rejected, (state, action) => {
-        state.loading.isLoading = false;
-        state.loading.error = action.payload as string;
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
@@ -171,17 +168,17 @@ const authSlice = createSlice({
       })
       // Fetch current user
       .addCase(fetchCurrentUser.pending, (state) => {
-        state.loading.isLoading = true;
-        state.loading.error = undefined;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
       })
       .addCase(fetchCurrentUser.rejected, (state, action) => {
-        state.loading.isLoading = false;
-        state.loading.error = action.payload as string;
+        state.loading = false;
+        state.error = action.payload as string;
         // If token is invalid, clear auth state
         if (action.payload === 'Invalid token') {
           state.user = null;
@@ -192,28 +189,28 @@ const authSlice = createSlice({
       })
       // Update profile
       .addCase(updateProfile.pending, (state) => {
-        state.loading.isLoading = true;
-        state.loading.error = undefined;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading = false;
         state.user = action.payload;
       })
       .addCase(updateProfile.rejected, (state, action) => {
-        state.loading.isLoading = false;
-        state.loading.error = action.payload as string;
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Change password
       .addCase(changePassword.pending, (state) => {
-        state.loading.isLoading = true;
-        state.loading.error = undefined;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(changePassword.fulfilled, (state) => {
-        state.loading.isLoading = false;
+        state.loading = false;
       })
       .addCase(changePassword.rejected, (state, action) => {
-        state.loading.isLoading = false;
-        state.loading.error = action.payload as string;
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Delete account
       .addCase(deleteAccount.fulfilled, (state) => {
@@ -222,7 +219,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
       .addCase(deleteAccount.rejected, (state, action) => {
-        state.loading.error = action.payload as string;
+        state.error = action.payload as string;
       });
   },
 });

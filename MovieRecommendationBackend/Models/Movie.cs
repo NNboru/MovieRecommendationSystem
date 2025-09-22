@@ -26,7 +26,7 @@ public class Movie
     [MaxLength(200)]
     public string? BackdropPath { get; set; }
     
-    public int? TMDBId { get; set; }
+    public int TMDBId { get; set; }
     
     public bool IsAdult { get; set; }
     
@@ -41,6 +41,7 @@ public class Movie
     // Navigation properties
     public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
     public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
+    public ICollection<Watchlist> Watchlists { get; set; } = new List<Watchlist>();
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

@@ -208,14 +208,9 @@ public class MoviesController : ControllerBase
             return NotFound();
         }
 
-        if (!movie.TMDBId.HasValue)
-        {
-            return BadRequest("Movie does not have a TMDB ID");
-        }
-
         try
         {
-            var recommendations = await _tmdbService.GetRecommendationsAsync(movie.TMDBId.Value);
+            var recommendations = await _tmdbService.GetRecommendationsAsync(movie.TMDBId);
             return Ok(CreateUIResponse(recommendations));
         }
         catch (Exception ex)
@@ -267,7 +262,7 @@ public class MoviesController : ControllerBase
             .Include(mg => mg.Genre)
             .LoadAsync();
 
-        return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, MapToMovieDto(movie));
+        return CreatedAtAction(nameof(GetMovie), new { id = movie.TMDBId }, MapToMovieDto(movie));
     }
 
     // PUT: api/movies/5
@@ -300,7 +295,7 @@ public class MoviesController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!MovieExists(id))
+            if (!MovieExists(movie.TMDBId))
             {
                 return NotFound();
             }

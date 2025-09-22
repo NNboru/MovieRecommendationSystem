@@ -29,6 +29,7 @@ public class User
     
     // Navigation properties
     public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
+    public ICollection<Watchlist> Watchlists { get; set; } = new List<Watchlist>();
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

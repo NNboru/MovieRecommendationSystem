@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<MovieGenre> MovieGenres { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Rating> Ratings { get; set; }
+    public DbSet<Watchlist> Watchlists { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,24 @@ public class ApplicationDbContext : DbContext
             .WithMany(m => m.Ratings)
             .HasForeignKey(r => r.MovieId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure Watchlist relationships
+        modelBuilder.Entity<Watchlist>()
+            .HasOne(w => w.User)
+            .WithMany(u => u.Watchlists)
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Watchlist>()
+            .HasOne(w => w.Movie)
+            .WithMany(m => m.Watchlists)
+            .HasForeignKey(w => w.MovieId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Ensure unique constraint for watchlist (one user can only have one entry per movie)
+        modelBuilder.Entity<Watchlist>()
+            .HasIndex(w => new { w.UserId, w.MovieId })
+            .IsUnique();
 
         // Ensure unique constraints
         modelBuilder.Entity<User>()

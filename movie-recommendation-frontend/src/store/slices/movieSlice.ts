@@ -95,7 +95,7 @@ export const fetchGenres = createAsyncThunk(
 export const fetchWatchlist = createAsyncThunk(
   'movies/fetchWatchlist',
   async (userId: number) => {
-    const response = await movieApi.getWatchlist(userId);
+    const response = await movieApi.getWatchlist();
     return response;
   }
 );
@@ -103,7 +103,7 @@ export const fetchWatchlist = createAsyncThunk(
 export const addToWatchlist = createAsyncThunk(
   'movies/addToWatchlist',
   async ({ userId, movieId }: { userId: number; movieId: number }) => {
-    const response = await movieApi.addToWatchlist(userId, movieId);
+    const response = await movieApi.addToWatchlist(movieId);
     return response;
   }
 );
@@ -111,7 +111,7 @@ export const addToWatchlist = createAsyncThunk(
 export const removeFromWatchlist = createAsyncThunk(
   'movies/removeFromWatchlist',
   async ({ userId, movieId }: { userId: number; movieId: number }) => {
-    const response = await movieApi.removeFromWatchlist(userId, movieId);
+    const response = await movieApi.removeFromWatchlist(movieId);
     return response;
   }
 );
@@ -228,7 +228,7 @@ const movieSlice = createSlice({
       // Remove from watchlist
       .addCase(removeFromWatchlist.fulfilled, (state, action) => {
         state.watchlist = state.watchlist.filter(
-          (movie) => movie.id !== action.payload.id
+          (movie) => movie.tmdbId !== action.payload.movieId
         );
       });
   },

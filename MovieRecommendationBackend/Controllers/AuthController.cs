@@ -58,7 +58,9 @@ public class AuthController : ControllerBase
                 PasswordHash = HashPassword(registerDto.Password),
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
-                DateOfBirth = registerDto.DateOfBirth,
+                DateOfBirth = registerDto.DateOfBirth.HasValue 
+                    ? DateTime.SpecifyKind(registerDto.DateOfBirth.Value, DateTimeKind.Utc)
+                    : null,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -236,7 +238,7 @@ public class AuthController : ControllerBase
                 user.LastName = updateProfileDto.LastName;
             
             if (updateProfileDto.DateOfBirth.HasValue)
-                user.DateOfBirth = updateProfileDto.DateOfBirth;
+                user.DateOfBirth = DateTime.SpecifyKind(updateProfileDto.DateOfBirth.Value, DateTimeKind.Utc);
 
             user.UpdatedAt = DateTime.UtcNow;
 

@@ -1,10 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
-import { 
-  Movie, 
-  Genre, 
-  User, 
-  LoginForm, 
-  RegisterForm, 
+import {
+  Movie,
+  Genre,
+  User,
+  LoginForm,
+  RegisterForm,
   UpdateProfileForm,
   ChangePasswordForm,
   AuthResponse,
@@ -78,7 +78,7 @@ export const movieApi = {
   // Search movies through our backend
   searchMovies: async (filters: SearchFilters, page: number = 1): Promise<PaginatedResponse<Movie>> => {
     const params = new URLSearchParams();
-    
+
     if (filters.query) params.append('q', filters.query);
     if (filters.genre) params.append('genre', filters.genre.toString());
     if (filters.releaseDateFrom) params.append('releaseDateFrom', filters.releaseDateFrom);
@@ -93,7 +93,7 @@ export const movieApi = {
     if (filters.certification) params.append('certification', filters.certification);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-    
+
     params.append('page', page.toString());
 
     const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(
@@ -115,26 +115,30 @@ export const movieApi = {
   },
 
   // Get watchlist
-  getWatchlist: async (userId: number): Promise<Movie[]> => {
-    const response: AxiosResponse<Movie[]> = await apiClient.get(`/users/${userId}/watchlist`);
+  getWatchlist: async (): Promise<Movie[]> => {
+    const response: AxiosResponse<Movie[]> = await apiClient.get('/watchlist/getWatchlist');
     return response.data;
   },
 
   // Add to watchlist
-  addToWatchlist: async (userId: number, movieId: number): Promise<Movie> => {
+  addToWatchlist: async (movieId: number): Promise<Movie> => {
     const response: AxiosResponse<Movie> = await apiClient.post(
-      `/users/${userId}/watchlist`,
-      { movieId }
+      '/watchlist/addToWatchlist',
+      { MovieId: movieId }
     );
     return response.data;
   },
 
   // Remove from watchlist
-  removeFromWatchlist: async (userId: number, movieId: number): Promise<Movie> => {
-    const response: AxiosResponse<Movie> = await apiClient.delete(
-      `/users/${userId}/watchlist/${movieId}`
-    );
-    return response.data;
+  removeFromWatchlist: async (movieId: number): Promise<{ movieId: number }> => {
+    await apiClient.delete(`/watchlist/${movieId}`);
+    return { movieId };
+  },
+
+  // Check if movie is in watchlist
+  isInWatchlist: async (movieId: number): Promise<boolean> => {
+    const response: AxiosResponse<{ isInWatchlist: boolean }> = await apiClient.get(`/watchlist/check/${movieId}`);
+    return response.data.isInWatchlist;
   },
 };
 
