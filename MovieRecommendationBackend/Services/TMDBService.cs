@@ -150,6 +150,15 @@ public class TMDBService : ITMDBService
         return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
     }
 
+    public async Task<List<MovieDto>> GetSimilarMoviesAsync(int movieId, int page = 1)
+    {
+        var url = $"{_baseUrl}/movie/{movieId}/similar?page={page}";
+        string content = await ApiCall(url);
+        var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
+
+        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+    }
+
     public async Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request)
     {
         var queryParams = new List<string>();

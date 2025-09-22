@@ -29,7 +29,8 @@ import {
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { movieApi } from '../services/api';
-import { Movie } from '../types';
+import { Movie, PaginatedResponse } from '../types';
+import MovieList from '../components/movies/MovieList';
 
 const MovieDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,8 +41,34 @@ const MovieDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [recommendations, setRecommendations] = useState<Movie[]>([]);
+  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const fetchRecommendationsAndSimilar = async (movieId: number) => {
+    try {
+      setLoadingRecommendations(true);
+      setLoadingSimilar(true);
+
+      // Fetch recommendations and similar movies in parallel
+      const [recommendationsResponse, similarResponse] = await Promise.all([
+        movieApi.getMovieRecommendations(movieId),
+        movieApi.getSimilarMovies(movieId)
+      ]);
+
+      setRecommendations(recommendationsResponse.data || []);
+      setSimilarMovies(similarResponse.data || []);
+    } catch (err) {
+      console.error('Error fetching recommendations and similar movies:', err);
+      // Don't show error to user, just log it
+    } finally {
+      setLoadingRecommendations(false);
+      setLoadingSimilar(false);
+    }
+  };
 
   useEffect(() => {
     const fetchMovieDetails = async () => {
@@ -56,6 +83,10 @@ const MovieDetailsPage: React.FC = () => {
         setError(null);
         const movieData = await movieApi.getMovieDetails(parseInt(id));
         setMovie(movieData);
+        
+        // Fetch recommendations and similar movies after movie details are loaded
+        // Use the internal movie ID from the database
+        fetchRecommendationsAndSimilar(parseInt(id));
       } catch (err) {
         console.error('Error fetching movie details:', err);
         setError('Failed to load movie details');
@@ -364,65 +395,77 @@ const MovieDetailsPage: React.FC = () => {
             More Information
           </Typography>
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-              gap: 4,
-            }}
-          >
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Movie Details
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      TMDB ID:
-                    </Typography>
-                    <Typography variant="body2">
-                      {movie.tmdbId}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Added to Database:
-                    </Typography>
-                    <Typography variant="body2">
-                      {new Date(movie.createdAt).toLocaleDateString()}
-                    </Typography>
-                  </Box>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Movie Details
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    TMDB ID:
+                  </Typography>
+                  <Typography variant="body2">
+                    {movie.tmdbId}
+                  </Typography>
                 </Box>
-              </CardContent>
-            </Card>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Added to Database:
+                  </Typography>
+                  <Typography variant="body2">
+                    {new Date(movie.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
 
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  User Actions
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Your Rating:
-                    </Typography>
-                    <Rating
-                      value={movie.userRating || 0}
-                      precision={0.5}
-                      size="large"
-                    // TODO: Implement rating functionality
-                    />
-                  </Box>
-                  {!isAuthenticated && (
-                    <Alert severity="info">
-                      Sign in to rate movies and add them to your watchlist
-                    </Alert>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
+        {/* Recommendations Section */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h4" sx={{ mb: 3 }}>
+            Recommendations
+          </Typography>
+          {loadingRecommendations ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : recommendations.length > 0 ? (
+            <MovieList
+              movies={recommendations}
+              showWatchlistButton={true}
+              showLikeButtons={true}
+              onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
+            />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+              No recommendations available for this movie.
+            </Typography>
+          )}
+        </Box>
+
+        {/* Similar Movies Section */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h4" sx={{ mb: 3 }}>
+            Similar Movies
+          </Typography>
+          {loadingSimilar ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : similarMovies.length > 0 ? (
+            <MovieList
+              movies={similarMovies}
+              showWatchlistButton={true}
+              showLikeButtons={true}
+              onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
+            />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+              No similar movies available for this movie.
+            </Typography>
+          )}
         </Box>
       </Container>
     </Box>

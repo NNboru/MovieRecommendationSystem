@@ -12,6 +12,7 @@ public interface ITMDBService
     Task<List<GenreDto>> GetGenresAsync();
     Task<List<MovieDto>> GetMoviesByGenreAsync(int genreId, int page = 1);
     Task<List<MovieDto>> GetRecommendationsAsync(int movieId, int page = 1);
+    Task<List<MovieDto>> GetSimilarMoviesAsync(int movieId, int page = 1);
     Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request);
 }
 

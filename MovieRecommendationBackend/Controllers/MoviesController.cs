@@ -219,6 +219,26 @@ public class MoviesController : ControllerBase
         }
     }
 
+    [HttpGet("{id}/similar")]
+    public async Task<ActionResult<IEnumerable<MovieDto>>> GetSimilarMovies(int id)
+    {
+        var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
+        if (movie == null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var similarMovies = await _tmdbService.GetSimilarMoviesAsync(movie.TMDBId);
+            return Ok(CreateUIResponse(similarMovies));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error fetching similar movies: {ex.Message}");
+        }
+    }
+
     // POST: api/movies
     [HttpPost]
     public async Task<ActionResult<MovieDto>> CreateMovie(CreateMovieDto createMovieDto)

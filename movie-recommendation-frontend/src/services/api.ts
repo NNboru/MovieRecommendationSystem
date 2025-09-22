@@ -142,6 +142,18 @@ export const movieApi = {
     const response: AxiosResponse<{ isInWatchlist: boolean }> = await apiClient.get(`/watchlist/check/${movieId}`);
     return response.data.isInWatchlist;
   },
+
+  // Get movie recommendations
+  getMovieRecommendations: async (movieId: number): Promise<PaginatedResponse<Movie>> => {
+    const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(`/movies/${movieId}/recommendations`);
+    return response.data;
+  },
+
+  // Get similar movies
+  getSimilarMovies: async (movieId: number): Promise<PaginatedResponse<Movie>> => {
+    const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(`/movies/${movieId}/similar`);
+    return response.data;
+  },
 };
 
 // Auth API
