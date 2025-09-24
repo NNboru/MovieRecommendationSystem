@@ -153,7 +153,7 @@ const LikeListPage: React.FC = () => {
                       size="small"
                       color={item.status === LikeStatus.Liked ? 'success' : 'error'}
                       variant="filled"
-                      sx={{ mb: 1 }}
+                      sx={{ mb: 1, ml:1 }}
                     />
                   </Box>
 

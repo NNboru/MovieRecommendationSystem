@@ -26,7 +26,7 @@ import {
 import { useAppSelector } from '../hooks/redux';
 import { movieApi } from '../services/api';
 import { Movie, PaginatedResponse } from '../types';
-import MovieList from '../components/movies/MovieList';
+import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 
 const MovieDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -426,7 +426,7 @@ const MovieDetailsPage: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : recommendations.length > 0 ? (
-            <MovieList
+            <HorizontalMovieList
               movies={recommendations}
               showWatchlistButton={true}
               showLikeButtons={true}
@@ -449,7 +449,7 @@ const MovieDetailsPage: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : similarMovies.length > 0 ? (
-            <MovieList
+            <HorizontalMovieList
               movies={similarMovies}
               showWatchlistButton={true}
               showLikeButtons={true}

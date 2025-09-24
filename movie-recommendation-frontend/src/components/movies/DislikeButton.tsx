@@ -40,13 +40,19 @@ const DislikeButton: React.FC<DislikeButtonProps> = ({ movie, size = 'medium', s
     <IconButton
       onClick={handleDislikeToggle}
       size={size}
-      color="inherit"
       disabled={isActionLoading}
+      sx={{
+        color: isDisliked ? 'red' : 'inherit',
+        '&:hover': {
+          color: 'red',
+          backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        },
+      }}
     >
       {isActionLoading ? (
         <CircularProgress size={size === 'small' ? 20 : 24} color="inherit" />
       ) : (
-        isDisliked ? <ThumbDown color="error" /> : <ThumbDownOutlined />
+        isDisliked ? <ThumbDown /> : <ThumbDownOutlined />
       )}
     </IconButton>
   );

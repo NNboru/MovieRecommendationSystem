@@ -40,13 +40,19 @@ const LikeButton: React.FC<LikeButtonProps> = ({ movie, size = 'medium', showToo
     <IconButton
       onClick={handleLikeToggle}
       size={size}
-      color="inherit"
       disabled={isActionLoading}
+      sx={{
+        color: isLiked ? 'green' : 'inherit',
+        '&:hover': {
+          color: 'green',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        },
+      }}
     >
       {isActionLoading ? (
         <CircularProgress size={size === 'small' ? 20 : 24} color="inherit" />
       ) : (
-        isLiked ? <Favorite color="error" /> : <FavoriteBorder />
+        isLiked ? <Favorite /> : <FavoriteBorder />
       )}
     </IconButton>
   );
