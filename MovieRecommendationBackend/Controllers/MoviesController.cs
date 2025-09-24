@@ -202,15 +202,9 @@ public class MoviesController : ControllerBase
     [HttpGet("{id}/recommendations")]
     public async Task<ActionResult<IEnumerable<MovieDto>>> GetRecommendations(int id)
     {
-        var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
-        if (movie == null)
-        {
-            return NotFound();
-        }
-
         try
         {
-            var recommendations = await _tmdbService.GetRecommendationsAsync(movie.TMDBId);
+            var recommendations = await _tmdbService.GetRecommendationsAsync(id);
             return Ok(CreateUIResponse(recommendations));
         }
         catch (Exception ex)
@@ -222,15 +216,9 @@ public class MoviesController : ControllerBase
     [HttpGet("{id}/similar")]
     public async Task<ActionResult<IEnumerable<MovieDto>>> GetSimilarMovies(int id)
     {
-        var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
-        if (movie == null)
-        {
-            return NotFound();
-        }
-
         try
         {
-            var similarMovies = await _tmdbService.GetSimilarMoviesAsync(movie.TMDBId);
+            var similarMovies = await _tmdbService.GetSimilarMoviesAsync(id);
             return Ok(CreateUIResponse(similarMovies));
         }
         catch (Exception ex)
