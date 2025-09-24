@@ -26,8 +26,8 @@ import DislikeButton from './DislikeButton';
 const MovieCard: React.FC<MovieCardProps> = ({
   movie,
   onMovieClick,
-  showWatchlistButton = false,
-  showLikeButtons = false,
+  showWatchlistButton = true,
+  showLikeButtons = true,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -65,6 +65,8 @@ const MovieCard: React.FC<MovieCardProps> = ({
         flexDirection: 'column',
         cursor: 'pointer',
         transition: 'all 0.3s ease',
+        maxWidth: 280,
+        flexShrink: 0,
         '&:hover': {
           transform: 'translateY(-8px)',
           boxShadow: theme.shadows[8],

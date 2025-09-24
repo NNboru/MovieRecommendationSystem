@@ -8,6 +8,7 @@ import {
   fetchTopRatedMovies,
 } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
+import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 import HeroSection from '../components/home/HeroSection';
 import { Movie } from '../types';
 
@@ -60,14 +61,17 @@ const HomePage: React.FC = () => {
             <Alert severity="error" sx={{ mb: 2 }}>
               {loading.error}
             </Alert>
+          ) : loading.isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
           ) : (
-          <MovieList
-            movies={trendingMovies}
-            loading={loading.isLoading}
-            showWatchlistButton={true}
-            showLikeButtons={true}
-            onMovieClick={handleMovieClick}
-          />
+            <HorizontalMovieList
+              movies={trendingMovies}
+              showWatchlistButton={true}
+              showLikeButtons={true}
+              onMovieClick={handleMovieClick}
+            />
           )}
         </Box>
 
@@ -76,13 +80,18 @@ const HomePage: React.FC = () => {
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Popular Movies
           </Typography>
-          <MovieList
-            movies={popularMovies}
-            loading={loading.isLoading}
-            showWatchlistButton={true}
-            showLikeButtons={true}
-            onMovieClick={handleMovieClick}
-          />
+          {loading.isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <HorizontalMovieList
+              movies={popularMovies}
+              showWatchlistButton={true}
+              showLikeButtons={true}
+              onMovieClick={handleMovieClick}
+            />
+          )}
         </Box>
 
         {/* Top Rated Movies */}

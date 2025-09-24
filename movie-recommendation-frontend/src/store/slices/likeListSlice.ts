@@ -54,17 +54,6 @@ export const removeFromLikeList = createAsyncThunk(
   }
 );
 
-export const checkLikeStatus = createAsyncThunk(
-  'likeList/checkLikeStatus',
-  async (movieId: number, { rejectWithValue }) => {
-    try {
-      const response = await likeListApi.checkLikeStatus(movieId);
-      return { movieId, status: response.status };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to check like status');
-    }
-  }
-);
 
 const likeListSlice = createSlice({
   name: 'likeList',
@@ -146,21 +135,6 @@ const likeListSlice = createSlice({
       .addCase(removeFromLikeList.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-      
-      // Check like status
-      .addCase(checkLikeStatus.fulfilled, (state, action) => {
-        const { movieId, status } = action.payload;
-        if (status === 'none') {
-          state.likeStatuses[movieId] = null;
-        } else if (status === 'liked') {
-          state.likeStatuses[movieId] = LikeStatus.Liked;
-        } else if (status === 'disliked') {
-          state.likeStatuses[movieId] = LikeStatus.Disliked;
-        }
-      })
-      .addCase(checkLikeStatus.rejected, (state, action) => {
-        state.error = action.payload as string;
-      });
   },
 });
 

@@ -49,7 +49,7 @@ const MovieList: React.FC<MovieListProps> = ({
             lg: 'repeat(5, 1fr)', // 5 columns on large screens
             xl: 'repeat(6, 1fr)', // 6 columns on extra large screens
           },
-          gap: { xs: 1.5, sm: 2, md: 2.5 },
+          gap: { xs: 1, sm: 1.5, md: 2 },
           width: '100%',
         }}
       >

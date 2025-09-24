@@ -11,6 +11,7 @@ public class TMDBService : ITMDBService
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
     private readonly ILogger<TMDBService> _logger;
+    private static Dictionary<int, string>? _genreCache;
 
     public TMDBService(HttpClient httpClient, IConfiguration configuration, ILogger<TMDBService> logger)
     {
@@ -64,7 +65,8 @@ public class TMDBService : ITMDBService
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
         _logger.LogInformation("Successfully retrieved {Count} popular movies from TMDB", result?.Results?.Count ?? 0);
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        
+        return await MapResultsToMovies(result?.Results);
     }
 
 
@@ -77,7 +79,8 @@ public class TMDBService : ITMDBService
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
         _logger.LogInformation("Successfully retrieved {Count} trending movies from TMDB", result?.Results?.Count ?? 0);
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<List<MovieDto>> GetTopRatedMoviesAsync(int page = 1)
@@ -89,7 +92,8 @@ public class TMDBService : ITMDBService
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
         _logger.LogInformation("Successfully retrieved {Count} top-rated movies from TMDB", result?.Results?.Count ?? 0);
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<List<MovieDto>> SearchMoviesAsync(string query, int page = 1, bool? includeAdult = null)
@@ -108,7 +112,8 @@ public class TMDBService : ITMDBService
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
         _logger.LogInformation("Successfully retrieved {Count} search results from TMDB", result?.Results?.Count ?? 0);
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<MovieDto?> GetMovieByIdAsync(int tmdbId)
@@ -120,7 +125,7 @@ public class TMDBService : ITMDBService
         var movie = JsonConvert.DeserializeObject<TMDBMovie>(content);
 
         _logger.LogInformation("Successfully retrieved movie details from TMDB: {Title}", movie?.Title);
-        return movie != null ? MapToMovieDto(movie) : null;
+        return movie != null ? await MapToMovieDto(movie) : null;
     }
 
     public async Task<List<GenreDto>> GetGenresAsync()
@@ -138,7 +143,7 @@ public class TMDBService : ITMDBService
         string content = await ApiCall(url);
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<List<MovieDto>> GetRecommendationsAsync(int movieId, int page = 1)
@@ -147,7 +152,7 @@ public class TMDBService : ITMDBService
         string content = await ApiCall(url);
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<List<MovieDto>> GetSimilarMoviesAsync(int movieId, int page = 1)
@@ -156,7 +161,7 @@ public class TMDBService : ITMDBService
         string content = await ApiCall(url);
         var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
 
-        return result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        return await MapResultsToMovies(result?.Results);
     }
 
     public async Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request)
@@ -271,10 +276,10 @@ public class TMDBService : ITMDBService
             
             string content = await ApiCall(searchUrl);
             var result = JsonConvert.DeserializeObject<TMDBResponse>(content);
-            var movies = result?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+            var searchMovies = await MapResultsToMovies(result?.Results);
             
             // Apply additional filters on the search results
-            return ApplyClientSideFilters(movies, request);
+            return ApplyClientSideFilters(searchMovies, request);
         }
         
         // Build the discover URL
@@ -283,7 +288,7 @@ public class TMDBService : ITMDBService
         string discoverContent = await ApiCall(discoverUrl);
         var discoverResult = JsonConvert.DeserializeObject<TMDBResponse>(discoverContent);
         
-        return discoverResult?.Results?.Select(MapToMovieDto).ToList() ?? new List<MovieDto>();
+        return await MapResultsToMovies(discoverResult?.Results);
     }
     
     private static List<MovieDto> ApplyClientSideFilters(List<MovieDto> movies, DiscoverMoviesRequest request)
@@ -307,7 +312,7 @@ public class TMDBService : ITMDBService
         return filteredMovies.ToList();
     }
 
-    private static MovieDto MapToMovieDto(TMDBMovie movie)
+    private async Task<MovieDto> MapToMovieDto(TMDBMovie movie)
     {
         return new MovieDto
         {
@@ -323,7 +328,7 @@ public class TMDBService : ITMDBService
             OriginalLanguage = movie.OriginalLanguage,
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
-            Genres = new List<string>()
+            Genres = await MapGenreIdsToNames(movie.GenreIds)
         };
     }
 
@@ -334,6 +339,56 @@ public class TMDBService : ITMDBService
             Name = genre.Name,
             Id = genre.Id
         };
+    }
+
+    private async Task<List<string>> MapGenreIdsToNames(List<int> genreIds)
+    {
+        if (genreIds == null || !genreIds.Any())
+            return new List<string>();
+
+        // Initialize genre cache if not already done
+        if (_genreCache == null)
+        {
+            await InitializeGenreCache();
+        }
+
+        var genreNames = new List<string>();
+        foreach (var genreId in genreIds)
+        {
+            if (_genreCache!.TryGetValue(genreId, out var genreName))
+            {
+                genreNames.Add(genreName);
+            }
+        }
+
+        return genreNames;
+    }
+
+    private async Task<List<MovieDto>> MapResultsToMovies(List<TMDBMovie>? results)
+    {
+        var movies = new List<MovieDto>();
+        if (results != null)
+        {
+            foreach (var movie in results)
+            {
+                movies.Add(await MapToMovieDto(movie));
+            }
+        }
+        return movies;
+    }
+
+    private async Task InitializeGenreCache()
+    {
+        try
+        {
+            var genres = await GetGenresAsync();
+            _genreCache = genres.ToDictionary(g => g.Id, g => g.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize genre cache");
+            _genreCache = new Dictionary<int, string>();
+        }
     }
 
     // TMDB API response models

@@ -221,9 +221,5 @@ export const likeListApi = {
     return response.data;
   },
 
-  checkLikeStatus: async (movieId: number): Promise<{ status: string }> => {
-    const response: AxiosResponse<{ status: string }> = await apiClient.get(`/likelist/checkLikeStatus/${movieId}`);
-    return response.data;
-  },
 };
 
