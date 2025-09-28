@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using MovieRecommendationBackend.DTOs;
+using System.Threading.Tasks;
 
 namespace MovieRecommendationBackend.Services;
 
@@ -27,7 +28,7 @@ public class TMDBService : ITMDBService
         var response = await _httpClient.GetAsync(url);
         _logger.LogInformation("TMDB API response status: {StatusCode}", response.StatusCode);
 
-        string content = await response.Content.ReadAsStringAsync(); ;
+        string content = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode || (!string.IsNullOrEmpty(content) && content[0] == '<'))
         {
             response = await _httpClient.GetAsync(url);
@@ -328,7 +329,7 @@ public class TMDBService : ITMDBService
             OriginalLanguage = movie.OriginalLanguage,
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
-            Genres = await MapGenreIdsToNames(movie.GenreIds)
+            Genres = await MapGenreIdsToNames(movie),
         };
     }
 
@@ -341,11 +342,12 @@ public class TMDBService : ITMDBService
         };
     }
 
-    private async Task<List<string>> MapGenreIdsToNames(List<int> genreIds)
+    private async Task<List<string>> MapGenreIdsToNames(TMDBMovie movie)
     {
-        if (genreIds == null || !genreIds.Any())
-            return new List<string>();
-
+        if (movie.Genres != null)
+        {
+            return movie.Genres.Select(g => g.Name).ToList();
+        }
         // Initialize genre cache if not already done
         if (_genreCache == null)
         {
@@ -353,15 +355,14 @@ public class TMDBService : ITMDBService
         }
 
         var genreNames = new List<string>();
-        foreach (var genreId in genreIds)
+        foreach (var genreId in movie.GenreIds ?? [])
         {
             if (_genreCache!.TryGetValue(genreId, out var genreName))
             {
                 genreNames.Add(genreName);
             }
         }
-
-        return genreNames;
+        return genreNames ?? [];
     }
 
     private async Task<List<MovieDto>> MapResultsToMovies(List<TMDBMovie>? results)
@@ -371,7 +372,10 @@ public class TMDBService : ITMDBService
         {
             foreach (var movie in results)
             {
-                movies.Add(await MapToMovieDto(movie));
+                if (!string.IsNullOrEmpty(movie.BackdropPath) && !string.IsNullOrEmpty(movie.PosterPath))
+                {
+                    movies.Add(await MapToMovieDto(movie));
+                }
             }
         }
         return movies;
@@ -387,7 +391,7 @@ public class TMDBService : ITMDBService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize genre cache");
-            _genreCache = new Dictionary<int, string>();
+            _genreCache = [];
         }
     }
 
@@ -400,32 +404,20 @@ public class TMDBService : ITMDBService
 
     private class TMDBMovie
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
-
-        [JsonProperty("title")]
-        public string Title { get; set; } = string.Empty;
-
-        [JsonProperty("overview")]
-        public string? Overview { get; set; }
-
-        [JsonProperty("release_date")]
-        public string? ReleaseDate { get; set; }
-
-        [JsonProperty("vote_average")]
-        public double VoteAverage { get; set; }
-
-        [JsonProperty("vote_count")]
-        public int VoteCount { get; set; }
-
-        [JsonProperty("poster_path")]
-        public string? PosterPath { get; set; }
+        [JsonProperty("adult")]
+        public bool Adult { get; set; }
 
         [JsonProperty("backdrop_path")]
         public string? BackdropPath { get; set; }
 
-        [JsonProperty("adult")]
-        public bool Adult { get; set; }
+        [JsonProperty("genres")]       
+        public List<TMDBGenre>? Genres { get; set; }
+
+        [JsonProperty("genre_ids")]
+        public List<int>? GenreIds { get; set; }
+
+        [JsonProperty("id")]
+        public int Id { get; set; }
 
         [JsonProperty("original_language")]
         public string? OriginalLanguage { get; set; }
@@ -433,11 +425,26 @@ public class TMDBService : ITMDBService
         [JsonProperty("original_title")]
         public string? OriginalTitle { get; set; }
 
+        [JsonProperty("overview")]
+        public string? Overview { get; set; }
+
         [JsonProperty("popularity")]
         public double Popularity { get; set; }
 
-        [JsonProperty("genre_ids")]
-        public List<int> GenreIds { get; set; } = new List<int>();
+        [JsonProperty("poster_path")]
+        public string? PosterPath { get; set; }
+
+        [JsonProperty("release_date")]
+        public string? ReleaseDate { get; set; }
+
+        [JsonProperty("title")]
+        public string Title { get; set; } = string.Empty;
+
+        [JsonProperty("vote_average")]
+        public double VoteAverage { get; set; }
+
+        [JsonProperty("vote_count")]
+        public int VoteCount { get; set; }
     }
 
     private class TMDBGenreResponse

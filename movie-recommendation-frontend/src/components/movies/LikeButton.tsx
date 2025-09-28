@@ -15,10 +15,10 @@ interface LikeButtonProps {
 const LikeButton: React.FC<LikeButtonProps> = ({ movie, size = 'medium', showTooltip = false }) => {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { likeStatuses, loading } = useAppSelector((state) => state.likeList);
+  const { likeStatuses, loadingMovies } = useAppSelector((state) => state.likeList);
 
   const isLiked = likeStatuses[movie.tmdbId] === LikeStatus.Liked;
-  const isActionLoading = loading;
+  const isActionLoading = loadingMovies[movie.tmdbId] || false;
 
   const handleLikeToggle = (e: React.MouseEvent) => {
     e.stopPropagation();

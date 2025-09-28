@@ -8,6 +8,7 @@ interface LikeListState {
   loading: boolean;
   error: string | null;
   likeStatuses: { [movieId: number]: LikeStatus | null }; // Track like status for each movie
+  loadingMovies: { [movieId: number]: boolean }; // Track loading state for each movie
 }
 
 const initialState: LikeListState = {
@@ -16,6 +17,7 @@ const initialState: LikeListState = {
   loading: false,
   error: null,
   likeStatuses: {},
+  loadingMovies: {},
 };
 
 export const fetchLikeList = createAsyncThunk(
@@ -94,7 +96,14 @@ const likeListSlice = createSlice({
       })
       
       // Add to like list
+      .addCase(addToLikeList.pending, (state, action) => {
+        const movieId = action.meta.arg.movieId;
+        state.loadingMovies[movieId] = true;
+        state.error = null;
+      })
       .addCase(addToLikeList.fulfilled, (state, action) => {
+        const movieId = action.meta.arg.movieId;
+        state.loadingMovies[movieId] = false;
         const { movie, status } = action.payload;
         
         // Remove from opposite list if it exists
@@ -122,17 +131,27 @@ const likeListSlice = createSlice({
         state.likeStatuses[movie.tmdbId] = status;
       })
       .addCase(addToLikeList.rejected, (state, action) => {
+        const movieId = action.meta.arg.movieId;
+        state.loadingMovies[movieId] = false;
         state.error = action.payload as string;
       })
       
       // Remove from like list
+      .addCase(removeFromLikeList.pending, (state, action) => {
+        const movieId = action.meta.arg;
+        state.loadingMovies[movieId] = true;
+        state.error = null;
+      })
       .addCase(removeFromLikeList.fulfilled, (state, action) => {
         const movieId = action.payload;
+        state.loadingMovies[movieId] = false;
         state.likedMovies = state.likedMovies.filter(item => item.movie.tmdbId !== movieId);
         state.dislikedMovies = state.dislikedMovies.filter(item => item.movie.tmdbId !== movieId);
         state.likeStatuses[movieId] = null;
       })
       .addCase(removeFromLikeList.rejected, (state, action) => {
+        const movieId = action.meta.arg;
+        state.loadingMovies[movieId] = false;
         state.error = action.payload as string;
       })
   },

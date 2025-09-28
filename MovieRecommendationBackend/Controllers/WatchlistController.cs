@@ -35,7 +35,7 @@ public class WatchlistController : ControllerBase
 
     // GET: api/GetWatchlist
     [HttpGet("getWatchlist")]
-    public async Task<ActionResult<IEnumerable<MovieDto>>> GetWatchlist()
+    public ActionResult<IEnumerable<MovieDto>> GetWatchlist()
     {
         try
         {
@@ -45,34 +45,36 @@ public class WatchlistController : ControllerBase
                 return Unauthorized("Invalid token");
             }
 
-            var watchlistItems = await _context.Watchlists
+            var watchlistItems = _context.Watchlists
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Movie)
-                .OrderByDescending(w => w.CreatedAt)
-                .Select(w => new MovieDto
-                {
-                    Id = w.Movie.Id,
-                    Title = w.Movie.Title,
-                    Overview = w.Movie.Overview,
-                    ReleaseDate = w.Movie.ReleaseDate,
-                    VoteAverage = w.Movie.VoteAverage,
-                    VoteCount = w.Movie.VoteCount,
-                    PosterPath = w.Movie.PosterPath,
-                    BackdropPath = w.Movie.BackdropPath,
-                    TMDBId = w.Movie.TMDBId,
-                    IsAdult = w.Movie.IsAdult,
-                    OriginalLanguage = w.Movie.OriginalLanguage,
-                    OriginalTitle = w.Movie.OriginalTitle,
-                    Popularity = w.Movie.Popularity,
-                    Genres = w.Movie.MovieGenres
-                            .Select(mg => mg.Genre.Name)
-                            .ToList(),
-                    CreatedAt = w.Movie.CreatedAt,
-                    UpdatedAt = w.Movie.UpdatedAt
-                })
-                .ToListAsync();
+                    .ThenInclude(m => m.MovieGenres)
+                        .ThenInclude(mg => mg.Genre)
+                .OrderByDescending(w => w.CreatedAt);
 
-            return Ok(watchlistItems);
+            var movieDtos = watchlistItems.Select(w => new MovieDto
+            {
+                Id = w.Movie.Id,
+                Title = w.Movie.Title,
+                Overview = w.Movie.Overview,
+                ReleaseDate = w.Movie.ReleaseDate,
+                VoteAverage = w.Movie.VoteAverage,
+                VoteCount = w.Movie.VoteCount,
+                PosterPath = w.Movie.PosterPath,
+                BackdropPath = w.Movie.BackdropPath,
+                TMDBId = w.Movie.TMDBId,
+                IsAdult = w.Movie.IsAdult,
+                OriginalLanguage = w.Movie.OriginalLanguage,
+                OriginalTitle = w.Movie.OriginalTitle,
+                Popularity = w.Movie.Popularity,
+                Genres = w.Movie.MovieGenres
+                        .Select(mg => mg.Genre.Name)
+                        .ToList(),
+                CreatedAt = w.Movie.CreatedAt,
+                UpdatedAt = w.Movie.UpdatedAt
+            }).ToList();
+
+            return Ok(movieDtos);
         }
         catch (Exception ex)
         {
@@ -92,7 +94,7 @@ public class WatchlistController : ControllerBase
             {
                 return Unauthorized("Invalid token");
             }
-            // Check if the movie exists in the database
+            // Check if the movie exists in the database where movieId is TMDBId
             var movie = await _context.Movies
                 .FirstOrDefaultAsync(m => m.TMDBId == addToWatchlistDto.MovieId);
 
@@ -122,10 +124,30 @@ public class WatchlistController : ControllerBase
                     OriginalLanguage = tmdbMovie.OriginalLanguage,
                     OriginalTitle = tmdbMovie.OriginalTitle,
                     Popularity = tmdbMovie.Popularity,
+                    MovieGenres = [],
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
-                _context.Movies.Add(newMovie);
+
+                // Add genres to the movie
+                if (tmdbMovie.Genres != null && tmdbMovie.Genres.Count != 0)
+                {
+                    foreach (var genreName in tmdbMovie.Genres)
+                    {
+                        var genre = await _context.Genres.FirstOrDefaultAsync(g => g.Name == genreName);
+                        if (genre != null)
+                        {
+                            var movieGenre = new MovieGenre
+                            {
+                                MovieId = newMovie.Id,
+                                GenreId = genre.Id
+                            };
+                            newMovie.MovieGenres.Add(movieGenre);
+                        }
+                    }
+                }
+                await _context.Movies.AddAsync(newMovie);
+                await _context.MovieGenres.AddRangeAsync(newMovie.MovieGenres);
                 await _context.SaveChangesAsync();
 
                 // Update the MovieId in the DTO to the new movie's Id
@@ -269,5 +291,35 @@ public class WatchlistController : ControllerBase
             return userId;
         }
         return null;
+    }
+
+    private async Task PopulateMovieGenres(Movie movie)
+    {
+        try
+        {
+            // Fetch movie details from TMDB to get genres
+            var tmdbMovie = await _tmdbService.GetMovieByIdAsync(movie.TMDBId);
+            if (tmdbMovie != null && tmdbMovie.Genres != null && tmdbMovie.Genres.Any())
+            {
+                foreach (var genreName in tmdbMovie.Genres)
+                {
+                    var genre = await _context.Genres.FirstOrDefaultAsync(g => g.Name == genreName);
+                    if (genre != null)
+                    {
+                        var movieGenre = new MovieGenre
+                        {
+                            MovieId = movie.Id,
+                            GenreId = genre.Id
+                        };
+                        _context.MovieGenres.Add(movieGenre);
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error populating genres for movie {MovieId}", movie.Id);
+        }
     }
 }

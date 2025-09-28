@@ -15,10 +15,10 @@ interface DislikeButtonProps {
 const DislikeButton: React.FC<DislikeButtonProps> = ({ movie, size = 'medium', showTooltip = false }) => {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { likeStatuses, loading } = useAppSelector((state) => state.likeList);
+  const { likeStatuses, loadingMovies } = useAppSelector((state) => state.likeList);
 
   const isDisliked = likeStatuses[movie.tmdbId] === LikeStatus.Disliked;
-  const isActionLoading = loading;
+  const isActionLoading = loadingMovies[movie.tmdbId] || false;
 
   const handleDislikeToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
