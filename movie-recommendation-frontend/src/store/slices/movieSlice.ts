@@ -68,10 +68,18 @@ export const fetchTopRatedMovies = createAsyncThunk(
   }
 );
 
-export const searchMovies = createAsyncThunk(
-  'movies/search',
-  async ({ filters, page = 1 }: { filters: SearchFilters; page?: number }) => {
-    const response = await movieApi.searchMovies(filters, page);
+export const textSearchMovies = createAsyncThunk(
+  'movies/textSearch',
+  async ({ query, page = 1 }: { query: string; page?: number }) => {
+    const response = await movieApi.textSearchMovies(query, page);
+    return response;
+  }
+);
+
+export const discoverMovies = createAsyncThunk(
+  'movies/discover',
+  async ({ filters, page = 1 }: { filters: Omit<SearchFilters, 'query'>; page?: number }) => {
+    const response = await movieApi.discoverMovies(filters, page);
     return response;
   }
 );
@@ -182,12 +190,12 @@ const movieSlice = createSlice({
         state.loading.isLoading = false;
         state.loading.error = action.error.message;
       })
-      // Search movies
-      .addCase(searchMovies.pending, (state) => {
+      // Text search
+      .addCase(textSearchMovies.pending, (state) => {
         state.loading.isLoading = true;
         state.loading.error = undefined;
       })
-      .addCase(searchMovies.fulfilled, (state, action) => {
+      .addCase(textSearchMovies.fulfilled, (state, action) => {
         state.loading.isLoading = false;
         state.searchResults = action.payload.data;
         state.pagination = {
@@ -196,7 +204,25 @@ const movieSlice = createSlice({
           totalResults: action.payload.totalResults,
         };
       })
-      .addCase(searchMovies.rejected, (state, action) => {
+      .addCase(textSearchMovies.rejected, (state, action) => {
+        state.loading.isLoading = false;
+        state.loading.error = action.error.message;
+      })
+      // Discovery
+      .addCase(discoverMovies.pending, (state) => {
+        state.loading.isLoading = true;
+        state.loading.error = undefined;
+      })
+      .addCase(discoverMovies.fulfilled, (state, action) => {
+        state.loading.isLoading = false;
+        state.searchResults = action.payload.data;
+        state.pagination = {
+          page: action.payload.page,
+          totalPages: action.payload.totalPages,
+          totalResults: action.payload.totalResults,
+        };
+      })
+      .addCase(discoverMovies.rejected, (state, action) => {
         state.loading.isLoading = false;
         state.loading.error = action.error.message;
       })

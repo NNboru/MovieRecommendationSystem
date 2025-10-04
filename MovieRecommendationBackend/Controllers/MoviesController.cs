@@ -131,55 +131,60 @@ public class MoviesController : ControllerBase
         }
     }
 
-    // GET: api/movies/search?q=query
-    [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<MovieDto>>> SearchMovies(
-        [FromQuery] string? q, 
-        [FromQuery] int? genre,
-        [FromQuery] string? releaseDateFrom,
-        [FromQuery] string? releaseDateTo,
-        [FromQuery] string? language,
-        [FromQuery] double? minRating,
-        [FromQuery] double? maxRating,
-        [FromQuery] int? year,
-        [FromQuery] int? minRuntime,
-        [FromQuery] int? maxRuntime,
-        [FromQuery] bool? adult,
-        [FromQuery] string? certification,
-        [FromQuery] string? sortBy,
-        [FromQuery] string? sortOrder,
+    // GET: api/movies/text-search?q=query
+    [HttpGet("text-search")]
+    public async Task<ActionResult<IEnumerable<MovieDto>>> TextSearchMovies(
+        [FromQuery] string q,
         [FromQuery] int page = 1)
     {
         try
         {
-            // Create the discover request with all filters
-            var discoverRequest = new DiscoverMoviesRequest
+            if (string.IsNullOrWhiteSpace(q))
             {
-                Query = q,
-                Genre = genre,
-                ReleaseDateFrom = releaseDateFrom,
-                ReleaseDateTo = releaseDateTo,
-                Language = language,
-                MinRating = minRating,
-                MaxRating = maxRating,
-                Year = year,
-                MinRuntime = minRuntime,
-                MaxRuntime = maxRuntime,
-                Adult = adult,
-                Certification = certification,
-                SortBy = sortBy,
-                SortOrder = sortOrder,
-                Page = page
-            };
+                return BadRequest("Search query is required");
+            }
 
-            // Use the discover endpoint for all search functionality
-            var movies = await _tmdbService.DiscoverMoviesAsync(discoverRequest);
-
+            var movies = await _tmdbService.SearchMoviesAsync(q, page);
             return Ok(CreateUIResponse(movies));
         }
         catch (Exception ex)
         {
             return StatusCode(500, $"Error searching movies: {ex.Message}");
+        }
+    }
+
+    // GET: api/movies/discover
+    [HttpGet("discover")]
+    public async Task<ActionResult<IEnumerable<MovieDto>>> DiscoverMovies(
+        [FromQuery] List<int>? genres,
+        [FromQuery] int? releaseYear,
+        [FromQuery] double? minRating,
+        [FromQuery] int? minVoteCount,
+        [FromQuery] int page = 1,
+        [FromQuery] bool? adult = null,
+        [FromQuery] string? sortBy = null)
+    {
+        try
+        {
+            // Create the discover request with enhanced filters and defaults
+            var discoverRequest = new DiscoverMoviesRequest
+            {
+                Genres = genres, // Support multiple genres
+                ReleaseDateFrom = releaseYear.HasValue ? $"{releaseYear.Value}-01-01" : null, // Convert year to date
+                MinRating = minRating,
+                Adult = adult ?? true, // Default to true if not provided
+                SortBy = sortBy ?? "popularity", // Default sort if not provided
+                SortOrder = "desc", // Always descending
+                MinVoteCount = minVoteCount ?? 10, // Default to 10
+                Page = page
+            };
+
+            var movies = await _tmdbService.DiscoverMoviesAsync(discoverRequest);
+            return Ok(CreateUIResponse(movies));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error discovering movies: {ex.Message}");
         }
     }
 

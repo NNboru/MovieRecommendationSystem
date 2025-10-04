@@ -77,29 +77,36 @@ export const movieApi = {
     return response.data;
   },
 
-  // Search movies through our backend
-  searchMovies: async (filters: SearchFilters, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+  // Text search - only query parameter
+  textSearchMovies: async (query: string, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    params.append('page', page.toString());
+
+    const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(
+      `/movies/text-search?${params.toString()}`
+    );
+    return response.data;
+  },
+
+  // Discovery - only filters, no query
+  discoverMovies: async (filters: Omit<SearchFilters, 'query'>, page: number = 1): Promise<PaginatedResponse<Movie>> => {
     const params = new URLSearchParams();
 
-    if (filters.query) params.append('q', filters.query);
-    if (filters.genre) params.append('genre', filters.genre.toString());
-    if (filters.releaseDateFrom) params.append('releaseDateFrom', filters.releaseDateFrom);
-    if (filters.releaseDateTo) params.append('releaseDateTo', filters.releaseDateTo);
-    if (filters.language) params.append('language', filters.language);
+    // Support multiple genres
+    if (filters.genres && filters.genres.length > 0) {
+      filters.genres.forEach(genre => params.append('genres', genre.toString()));
+    }
+    if (filters.releaseYear) params.append('releaseYear', filters.releaseYear.toString());
     if (filters.minRating) params.append('minRating', filters.minRating.toString());
-    if (filters.maxRating) params.append('maxRating', filters.maxRating.toString());
-    if (filters.year) params.append('year', filters.year.toString());
-    if (filters.minRuntime) params.append('minRuntime', filters.minRuntime.toString());
-    if (filters.maxRuntime) params.append('maxRuntime', filters.maxRuntime.toString());
+    if (filters.minVoteCount) params.append('minVoteCount', filters.minVoteCount.toString());
     if (filters.adult !== undefined) params.append('adult', filters.adult.toString());
-    if (filters.certification) params.append('certification', filters.certification);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
     params.append('page', page.toString());
 
     const response: AxiosResponse<PaginatedResponse<Movie>> = await apiClient.get(
-      `/movies/search?${params.toString()}`
+      `/movies/discover?${params.toString()}`
     );
     return response.data;
   },

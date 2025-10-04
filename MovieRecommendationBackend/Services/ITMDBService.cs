@@ -19,7 +19,7 @@ public interface ITMDBService
 public class DiscoverMoviesRequest
 {
     public string? Query { get; set; }
-    public int? Genre { get; set; }
+    public List<int>? Genres { get; set; } // Support multiple genres
     public string? ReleaseDateFrom { get; set; }
     public string? ReleaseDateTo { get; set; }
     public string? Language { get; set; }
@@ -32,6 +32,7 @@ public class DiscoverMoviesRequest
     public string? Certification { get; set; }
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; }
+    public int? MinVoteCount { get; set; } // Add vote count filter
     public int Page { get; set; } = 1;
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -19,605 +19,566 @@ import {
   Alert,
   Paper,
   InputAdornment,
+  Tabs,
+  Tab,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   ExpandMore as ExpandMoreIcon,
   FilterList as FilterIcon,
   Clear as ClearIcon,
+  MovieFilter as DiscoverIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { searchMovies, fetchGenres } from '../store/slices/movieSlice';
+import { textSearchMovies, discoverMovies, fetchGenres } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
 import { Movie, SearchFilters } from '../types';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`search-tabpanel-${index}`}
+      aria-labelledby={`search-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
     searchResults,
     genres,
     loading,
-    searchFilters,
     pagination,
   } = useAppSelector((state) => state.movies);
 
-  const [localQuery, setLocalQuery] = useState(searchParams.get('q') || '');
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1);
-  const [localFilters, setLocalFilters] = useState<SearchFilters>({
-    query: searchParams.get('q') || '',
-    genre: searchParams.get('genre') ? parseInt(searchParams.get('genre')!) : undefined,
-    releaseDateFrom: searchParams.get('releaseDateFrom') || undefined,
-    releaseDateTo: searchParams.get('releaseDateTo') || undefined,
-    language: searchParams.get('language') || undefined,
-    minRating: searchParams.get('minRating') ? parseFloat(searchParams.get('minRating')!) : undefined,
-    maxRating: searchParams.get('maxRating') ? parseFloat(searchParams.get('maxRating')!) : undefined,
-    sortBy: (searchParams.get('sortBy') as 'popularity' | 'vote_average' | 'release_date' | 'title') || 'popularity',
-    sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
+  
+  // Text search state
+  const [textQuery, setTextQuery] = useState('');
+  const [textSearchPage, setTextSearchPage] = useState(1);
+  
+  // Filter discovery state with enhanced defaults
+  const [discoveryFilters, setDiscoveryFilters] = useState<Omit<SearchFilters, 'query'>>({
+    genres: [],
+    releaseYear: undefined,
+    minRating: undefined,
+    minVoteCount: 10,
+    adult: true,
+    sortBy: 'popularity',
   });
+  const [discoveryPage, setDiscoveryPage] = useState(1);
 
   useEffect(() => {
     // Fetch genres on component mount
     dispatch(fetchGenres());
+    
+    // Determine initial tab based on URL params
+    const query = searchParams.get('q');
+    const hasFilters = searchParams.get('genre') || searchParams.get('language') || 
+                      searchParams.get('releaseDateFrom') || searchParams.get('releaseDateTo') ||
+                      searchParams.get('minRating') || searchParams.get('maxRating');
+    
+    if (query) {
+      setActiveTab(0); // Text search tab
+      setTextQuery(query);
+    } else if (hasFilters) {
+      setActiveTab(1); // Discovery tab
+    }
   }, [dispatch]);
 
-  useEffect(() => {
-    // Perform search when URL params change
-    const query = searchParams.get('q');
-    const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
-    const genre = searchParams.get('genre');
-    const language = searchParams.get('language');
-    const releaseDateFrom = searchParams.get('releaseDateFrom');
-    const releaseDateTo = searchParams.get('releaseDateTo');
-    const minRating = searchParams.get('minRating');
-    const maxRating = searchParams.get('maxRating');
-
-    // Check if we have any search criteria (query or filters)
-    const hasSearchCriteria = query || genre || language || releaseDateFrom || releaseDateTo || minRating || maxRating;
-
-    if (hasSearchCriteria) {
-      setLocalQuery(query || '');
-      setCurrentPage(page);
-
-      const filters: SearchFilters = {
-        query: query || undefined,
-        genre: genre ? parseInt(genre) : undefined,
-        language: language || undefined,
-        releaseDateFrom: releaseDateFrom || undefined,
-        releaseDateTo: releaseDateTo || undefined,
-        minRating: minRating ? parseFloat(minRating) : undefined,
-        maxRating: maxRating ? parseFloat(maxRating) : undefined,
-        sortBy: (searchParams.get('sortBy') as 'popularity' | 'vote_average' | 'release_date' | 'title') || 'popularity',
-        sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
-      };
-
-      setLocalFilters(filters);
-      dispatch(searchMovies({ filters, page }));
-    }
-  }, [searchParams, dispatch]);
-
-  // Auto-focus the search input when component mounts
-  useEffect(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
+  // Text Search Functions
+  const handleTextSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localQuery.trim() || hasActiveFilters()) {
-      const newFilters = { ...localFilters, query: localQuery.trim() || undefined };
-      setCurrentPage(1);
-      updateURLAndSearch(newFilters, 1);
+    if (textQuery.trim()) {
+      setTextSearchPage(1);
+      updateTextSearchURL(textQuery.trim(), 1);
+      dispatch(textSearchMovies({ 
+        query: textQuery.trim(), 
+        page: 1 
+      }));
     }
   };
 
-  const handleFilterChange = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
-    const newFilters = { ...localFilters, [key]: value };
-    setLocalFilters(newFilters);
-    setCurrentPage(1);
-  };
-
-  const applyFilters = () => {
-    setCurrentPage(1);
-    updateURLAndSearch(localFilters, 1);
-    setShowFilters(false);
-  };
-
-  const clearFilters = () => {
-    const clearedFilters: SearchFilters = {
-      query: localQuery,
-      sortBy: 'popularity',
-      sortOrder: 'desc',
-    };
-    setLocalFilters(clearedFilters);
-    setCurrentPage(1);
-    updateURLAndSearch(clearedFilters, 1);
-  };
-
-  const updateURLAndSearch = (filters: SearchFilters, page: number = 1) => {
+  const updateTextSearchURL = (query: string, page: number = 1) => {
     const params = new URLSearchParams();
-
-    if (filters.query) params.set('q', filters.query);
-    if (filters.genre) params.set('genre', filters.genre.toString());
-    if (filters.releaseDateFrom) params.set('releaseDateFrom', filters.releaseDateFrom);
-    if (filters.releaseDateTo) params.set('releaseDateTo', filters.releaseDateTo);
-    if (filters.language) params.set('language', filters.language);
-    if (filters.minRating) params.set('minRating', filters.minRating.toString());
-    if (filters.maxRating) params.set('maxRating', filters.maxRating.toString());
-    if (filters.sortBy) params.set('sortBy', filters.sortBy);
-    if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
+    params.set('q', query);
     if (page > 1) params.set('page', page.toString());
-
     setSearchParams(params);
-    setCurrentPage(page);
-    dispatch(searchMovies({ filters, page }));
   };
 
-  const handleMovieClick = (movie: Movie) => {
-    if (movie.tmdbId) {
-      navigate(`/movie/${movie.tmdbId}`);
+  // Discovery Functions
+  const handleDiscoverySearch = () => {
+    setDiscoveryPage(1);
+    updateDiscoveryURL(discoveryFilters, 1);
+    dispatch(discoverMovies({ 
+      filters: discoveryFilters, 
+      page: 1 
+    }));
+  };
+
+  const handleDiscoveryFilterChange = <K extends keyof Omit<SearchFilters, 'query'>>(
+    key: K, 
+    value: Omit<SearchFilters, 'query'>[K]
+  ) => {
+    const newFilters = { ...discoveryFilters, [key]: value };
+    setDiscoveryFilters(newFilters);
+  };
+
+  const clearDiscoveryFilters = () => {
+    const clearedFilters: Omit<SearchFilters, 'query'> = {
+      genres: [],
+      releaseYear: undefined,
+      minRating: undefined,
+      minVoteCount: 10,
+      adult: true,
+      sortBy: 'popularity',
+    };
+    setDiscoveryFilters(clearedFilters);
+    setDiscoveryPage(1);
+    updateDiscoveryURL(clearedFilters, 1);
+    dispatch(discoverMovies({ 
+      filters: clearedFilters, 
+      page: 1 
+    }));
+  };
+
+  const updateDiscoveryURL = (filters: Omit<SearchFilters, 'query'>, page: number = 1) => {
+    const params = new URLSearchParams();
+    
+    // Support multiple genres
+    if (filters.genres && filters.genres.length > 0) {
+      filters.genres.forEach(genre => params.append('genres', genre.toString()));
     }
+    if (filters.releaseYear) params.set('releaseYear', filters.releaseYear.toString());
+    if (filters.minRating) params.set('minRating', filters.minRating.toString());
+    if (filters.minVoteCount) params.set('minVoteCount', filters.minVoteCount.toString());
+    if (filters.adult !== undefined) params.set('adult', filters.adult.toString());
+    if (filters.sortBy) params.set('sortBy', filters.sortBy);
+    if (page > 1) params.set('page', page.toString());
+    
+    setSearchParams(params);
   };
 
-  const hasActiveFilters = () => {
-    return !!(localFilters.genre || localFilters.releaseDateFrom || localFilters.releaseDateTo ||
-      localFilters.language || localFilters.minRating || localFilters.maxRating ||
-      localFilters.year || localFilters.minRuntime || localFilters.maxRuntime ||
-      localFilters.adult !== undefined || localFilters.certification);
+  const hasActiveDiscoveryFilters = () => {
+    return (discoveryFilters.genres && discoveryFilters.genres.length > 0) || 
+           discoveryFilters.releaseYear || 
+           discoveryFilters.minRating || 
+           discoveryFilters.minVoteCount !== 10 ||
+           discoveryFilters.adult !== true;
   };
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (localFilters.genre) count++;
-    if (localFilters.releaseDateFrom || localFilters.releaseDateTo) count++;
-    if (localFilters.language) count++;
-    if (localFilters.minRating || localFilters.maxRating) count++;
-    if (localFilters.year) count++;
-    if (localFilters.minRuntime || localFilters.maxRuntime) count++;
-    if (localFilters.adult !== undefined) count++;
-    if (localFilters.certification) count++;
-    return count;
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+    // Clear URL params when switching tabs
+    setSearchParams(new URLSearchParams());
   };
 
   return (
     <Container maxWidth={false} sx={{ py: 4 }}>
-      {/* Search Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ mb: 3, fontWeight: 'bold', width: '94vw' }}>
-          
-        </Typography>
+      <Typography variant="h4" component="h1" sx={{ mb: 3, fontWeight: 'bold' }}>
+        Find Movies
+      </Typography>
 
-          {/* Search Form */}
-          <Paper
-            component="form"
-            onSubmit={handleSearch}
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              mb: 2,
-              maxWidth: { xs: '100%', sm: 600, md: 700 },
-              mx: 'auto',
-            }}
-          >
-          <TextField
-            fullWidth
-            placeholder="Search for movies or use filters below..."
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            inputRef={searchInputRef}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ flexGrow: 1 }}
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Tab 
+            icon={<SearchIcon />} 
+            label="Search Movies" 
+            iconPosition="start"
+            sx={{ textTransform: 'none', fontSize: '1rem' }}
           />
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<SearchIcon />}
-            disabled={!localQuery.trim() && !hasActiveFilters()}
-          >
-            Search
-          </Button>
-        </Paper>
+          <Tab 
+            icon={<DiscoverIcon />} 
+            label="Discover Movies" 
+            iconPosition="start"
+            sx={{ textTransform: 'none', fontSize: '1rem' }}
+          />
+        </Tabs>
 
-        {/* Filters Toggle */}
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          alignItems: 'center', 
-          mb: 2,
-          maxWidth: { xs: '100%', sm: 600, md: 700 },
-          mx: 'auto',
-          justifyContent: 'center'
-        }}>
-          <Button
-            variant="outlined"
-            startIcon={<FilterIcon />}
-            onClick={() => setShowFilters(!showFilters)}
-            sx={{ minWidth: 120 }}
-          >
-            Filters {getActiveFiltersCount() > 0 && `(${getActiveFiltersCount()})`}
-          </Button>
-
-          {hasActiveFilters() && (
+        {/* Text Search Tab */}
+        <TabPanel value={activeTab} index={0}>
+          <Box component="form" onSubmit={handleTextSearch} sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search for movies by title, actor, or keyword..."
+              value={textQuery}
+              onChange={(e) => setTextQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: textQuery && (
+                  <InputAdornment position="end">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setTextQuery('');
+                        setSearchParams(new URLSearchParams());
+                      }}
+                      sx={{ minWidth: 'auto', p: 0.5 }}
+                    >
+                      <ClearIcon />
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
+            />
             <Button
-              variant="text"
-              startIcon={<ClearIcon />}
-              onClick={clearFilters}
-              color="secondary"
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={!textQuery.trim() || loading.isLoading}
+              startIcon={loading.isLoading ? <CircularProgress size={20} /> : <SearchIcon />}
             >
-              Clear Filters
+              {loading.isLoading ? 'Searching...' : 'Search Movies'}
             </Button>
-          )}
-        </Box>
-
-        {/* Active Filters Display */}
-        {hasActiveFilters() && (
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: 1, 
-            mb: 2,
-            maxWidth: { xs: '100%', sm: 600, md: 700 },
-            mx: 'auto',
-            justifyContent: 'center'
-          }}>
-            {localFilters.genre && (
-              <Chip
-                label={`Genre: ${genres.find(g => g.tmdbId === localFilters.genre)?.name || 'Unknown'}`}
-                onDelete={() => handleFilterChange('genre', undefined)}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {(localFilters.releaseDateFrom || localFilters.releaseDateTo) && (
-              <Chip
-                label={`Release: ${localFilters.releaseDateFrom || 'Any'} - ${localFilters.releaseDateTo || 'Any'}`}
-                onDelete={() => {
-                  setLocalFilters(prev => ({
-                    ...prev,
-                    releaseDateFrom: undefined,
-                    releaseDateTo: undefined,
-                  }));
-                }}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {localFilters.language && (
-              <Chip
-                label={`Language: ${localFilters.language.toUpperCase()}`}
-                onDelete={() => handleFilterChange('language', undefined)}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {(localFilters.minRating || localFilters.maxRating) && (
-              <Chip
-                label={`Rating: ${localFilters.minRating || 0} - ${localFilters.maxRating || 10}`}
-                onDelete={() => {
-                  setLocalFilters(prev => ({
-                    ...prev,
-                    minRating: undefined,
-                    maxRating: undefined,
-                  }));
-                }}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {localFilters.year && (
-              <Chip
-                label={`Year: ${localFilters.year}`}
-                onDelete={() => handleFilterChange('year', undefined)}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {(localFilters.minRuntime || localFilters.maxRuntime) && (
-              <Chip
-                label={`Runtime: ${localFilters.minRuntime || 0} - ${localFilters.maxRuntime || 300} min`}
-                onDelete={() => {
-                  setLocalFilters(prev => ({
-                    ...prev,
-                    minRuntime: undefined,
-                    maxRuntime: undefined,
-                  }));
-                }}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {localFilters.adult !== undefined && (
-              <Chip
-                label={`Content: ${localFilters.adult ? 'Adult' : 'Family Friendly'}`}
-                onDelete={() => handleFilterChange('adult', undefined)}
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {localFilters.certification && (
-              <Chip
-                label={`Cert: ${localFilters.certification}`}
-                onDelete={() => handleFilterChange('certification', undefined)}
-                color="primary"
-                variant="outlined"
-              />
-            )}
           </Box>
-        )}
-      </Box>
 
-      {/* Filters Panel */}
-      {showFilters && (
-        <Paper sx={{ mb: 4 }}>
-          <Accordion expanded={showFilters} onChange={() => setShowFilters(!showFilters)}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Advanced Filters</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
-                {/* Genre Filter */}
-                <FormControl fullWidth>
-                  <InputLabel>Genre</InputLabel>
-                  <Select
-                    value={localFilters.genre?.toString() || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const genreId = value ? Number(value) : undefined;
-                      handleFilterChange('genre', genreId);
-                    }}
-                    label="Genre"
-                  >
-                    <MenuItem value="">Any Genre</MenuItem>
-                    {genres.map((genre) => (
-                      <MenuItem key={genre.tmdbId} value={genre.tmdbId}>
-                        {genre.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Language Filter */}
-                <FormControl fullWidth>
-                  <InputLabel>Language</InputLabel>
-                  <Select
-                    value={localFilters.language || ''}
-                    onChange={(e) => handleFilterChange('language', e.target.value || undefined)}
-                    label="Language"
-                  >
-                    <MenuItem value="">Any Language</MenuItem>
-                    <MenuItem value="en">English</MenuItem>
-                    <MenuItem value="es">Spanish</MenuItem>
-                    <MenuItem value="fr">French</MenuItem>
-                    <MenuItem value="de">German</MenuItem>
-                    <MenuItem value="it">Italian</MenuItem>
-                    <MenuItem value="pt">Portuguese</MenuItem>
-                    <MenuItem value="ru">Russian</MenuItem>
-                    <MenuItem value="ja">Japanese</MenuItem>
-                    <MenuItem value="ko">Korean</MenuItem>
-                    <MenuItem value="zh">Chinese</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Release Date Range */}
-                <TextField
-                  label="Release Date From"
-                  type="date"
-                  value={localFilters.releaseDateFrom || ''}
-                  onChange={(e) => handleFilterChange('releaseDateFrom', e.target.value || undefined)}
-                  InputLabelProps={{ shrink: true }}
-                />
-
-                <TextField
-                  label="Release Date To"
-                  type="date"
-                  value={localFilters.releaseDateTo || ''}
-                  onChange={(e) => handleFilterChange('releaseDateTo', e.target.value || undefined)}
-                  InputLabelProps={{ shrink: true }}
-                />
-
-                {/* Rating Range */}
-                <Box>
-                  <Typography gutterBottom>Rating Range</Typography>
-                  <Slider
-                    value={[localFilters.minRating || 0, localFilters.maxRating || 10]}
-                    onChange={(_, newValue) => {
-                      const [min, max] = newValue as number[];
-                      setLocalFilters(prev => ({
-                        ...prev,
-                        minRating: min,
-                        maxRating: max,
-                      }));
-                    }}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={10}
-                    step={0.1}
-                      marks={[...Array(6).keys()].map(i => ({ value: i * 2, label: i * 2 }))}
-                  />
-                </Box>
-
-                {/* Year Filter */}
-                <FormControl fullWidth>
-                  <InputLabel>Year</InputLabel>
-                  <Select
-                    value={localFilters.year?.toString() || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const year = value ? Number(value) : undefined;
-                      handleFilterChange('year', year);
-                    }}
-                    label="Year"
-                  >
-                    <MenuItem value="">Any Year</MenuItem>
-                    {Array.from({ length: 50 }, (_, i) => 2024 - i).map(year => (
-                      <MenuItem key={year} value={year.toString()}>
-                        {year}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Runtime Filter */}
-                <Box>
-                  <Typography gutterBottom>Runtime (minutes)</Typography>
-                  <Slider
-                    value={[localFilters.minRuntime || 0, localFilters.maxRuntime || 300]}
-                    onChange={(_, newValue) => {
-                      const [min, max] = newValue as number[];
-                      setLocalFilters(prev => ({
-                        ...prev,
-                        minRuntime: min,
-                        maxRuntime: max,
-                      }));
-                    }}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={300}
-                    step={15}
-                    marks={[
-                      { value: 0, label: '0m' },
-                      { value: 90, label: '90m' },
-                      { value: 180, label: '180m' },
-                      { value: 300, label: '300m' },
-                    ]}
-                  />
-                </Box>
-
-                {/* Adult Content Filter */}
-                <FormControl fullWidth>
-                  <InputLabel>Content Rating</InputLabel>
-                  <Select
-                    value={localFilters.adult === undefined ? '' : localFilters.adult.toString()}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const adult = value === '' ? undefined : value === 'true';
-                      handleFilterChange('adult', adult);
-                    }}
-                    label="Content Rating"
-                  >
-                    <MenuItem value="">Any Content</MenuItem>
-                    <MenuItem value="false">Family Friendly</MenuItem>
-                    <MenuItem value="true">Adult Content</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Certification Filter */}
-                <FormControl fullWidth>
-                  <InputLabel>Certification</InputLabel>
-                  <Select
-                    value={localFilters.certification || ''}
-                    onChange={(e) => handleFilterChange('certification', e.target.value || undefined)}
-                    label="Certification"
-                  >
-                    <MenuItem value="">Any Certification</MenuItem>
-                    <MenuItem value="G">G - General Audiences</MenuItem>
-                    <MenuItem value="PG">PG - Parental Guidance</MenuItem>
-                    <MenuItem value="PG-13">PG-13 - Parents Strongly Cautioned</MenuItem>
-                    <MenuItem value="R">R - Restricted</MenuItem>
-                    <MenuItem value="NC-17">NC-17 - Adults Only</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Sort Options */}
-                <FormControl fullWidth>
-                  <InputLabel>Sort By</InputLabel>
-                  <Select
-                    value={localFilters.sortBy || 'popularity'}
-                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    label="Sort By"
-                  >
-                    <MenuItem value="popularity">Popularity</MenuItem>
-                    <MenuItem value="release_date">Release Date</MenuItem>
-                    <MenuItem value="vote_average">Rating</MenuItem>
-                    <MenuItem value="title">Title</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-                <Button variant="outlined" onClick={() => setShowFilters(false)}>
-                  Cancel
-                </Button>
-                <Button variant="contained" onClick={applyFilters}>
-                  Apply Filters
-                </Button>
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        </Paper>
-      )}
-
-      {/* Search Results */}
-      {(localQuery || hasActiveFilters()) && (
-        <Box>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            {localQuery
-              ? `Search Results for "${localQuery}"`
-              : "Filtered Movies"
-            }
-            {pagination.totalResults > 0 && (
-              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                ({pagination.totalResults.toLocaleString()} results)
-              </Typography>
-            )}
-          </Typography>
-
-          {loading.isLoading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-              <CircularProgress size={60} />
-            </Box>
-          ) : loading.error ? (
+          {loading.error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {loading.error}
             </Alert>
-          ) : searchResults.length > 0 ? (
-            <MovieList
-              movies={searchResults}
-              loading={loading.isLoading}
-              showWatchlistButton={true}
-              onMovieClick={handleMovieClick}
-            />
-          ) : (
-            <Box textAlign="center" py={4}>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                No movies found matching your search criteria.
+          )}
+
+          {searchResults.length > 0 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Search Results for "{textQuery}"
+                {pagination.totalResults > 0 && (
+                  <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    ({pagination.totalResults} results)
+                  </Typography>
+                )}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Try adjusting your search terms or filters.
+              {loading.isLoading ? (
+                <Box display="flex" justifyContent="center" py={4}>
+                  <CircularProgress />
+                </Box>
+              ) : searchResults.length > 0 ? (
+                <MovieList 
+                  movies={searchResults} 
+                  showLikeButtons={true}
+                  onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
+                />
+              ) : (
+                <Box textAlign="center" py={4}>
+                  <Typography variant="h6" color="text.secondary">
+                    No movies found for "{textQuery}"
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Try different keywords or check your spelling.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {searchResults.length == 0 && (
+            <Box textAlign="center" py={8}>
+              <SearchIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
+                Search for Movies
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Enter a movie title, actor name, or keyword to find movies.
               </Typography>
             </Box>
           )}
-        </Box>
-      )}
+        </TabPanel>
 
-      {/* No Search Query or Filters */}
-      {!localQuery && !hasActiveFilters() && (
-        <Box textAlign="center" py={8}>
-          <SearchIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
-            Search for Movies
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Enter a movie title, actor name, or use our advanced filters to find the perfect movie.
-          </Typography>
-        </Box>
-      )}
+        {/* Discovery Tab */}
+        <TabPanel value={activeTab} index={1}>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Discover Movies by Filters
+            </Typography>
+            
+            <Accordion defaultExpanded>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <FilterIcon sx={{ mr: 1 }} />
+                  <Typography>Filters</Typography>
+                  {hasActiveDiscoveryFilters() && (
+                    <Chip 
+                      label="Active" 
+                      color="primary" 
+                      size="small" 
+                      sx={{ ml: 2 }}
+                    />
+                  )}
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                          {/* Multi-Genre Filter */}
+                          <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
+                            <Typography gutterBottom>Genres (Select Multiple)</Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, maxHeight: 120, overflowY: 'auto', p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                              {genres.filter(genre => genre.tmdbId !== undefined).map((genre) => (
+                                <Chip
+                                  key={genre.tmdbId}
+                                  label={genre.name}
+                                  onClick={() => {
+                                    const currentGenres = discoveryFilters.genres || [];
+                                    const genreId = genre.tmdbId!; // We know it's defined due to filter above
+                                    const isSelected = currentGenres.includes(genreId);
+                                    const newGenres = isSelected 
+                                      ? currentGenres.filter(id => id !== genreId)
+                                      : [...currentGenres, genreId];
+                                    handleDiscoveryFilterChange('genres', newGenres);
+                                  }}
+                                  color={discoveryFilters.genres?.includes(genre.tmdbId!) ? 'primary' : 'default'}
+                                  variant={discoveryFilters.genres?.includes(genre.tmdbId!) ? 'filled' : 'outlined'}
+                                  size="small"
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+
+                          {/* Release Year */}
+                          <FormControl fullWidth>
+                            <InputLabel>Release Year From</InputLabel>
+                            <Select
+                              value={discoveryFilters.releaseYear || ''}
+                              onChange={(e) => handleDiscoveryFilterChange('releaseYear', e.target.value ? Number(e.target.value) : undefined)}
+                              label="Release Year From"
+                            >
+                              <MenuItem value="">Any Year</MenuItem>
+                              {Array.from({ length: 30 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return (
+                                  <MenuItem key={year} value={year}>
+                                    {year}
+                                  </MenuItem>
+                                );
+                              })}
+                            </Select>
+                          </FormControl>
+
+                          {/* Min Rating */}
+                          <FormControl fullWidth>
+                            <InputLabel>Minimum Rating</InputLabel>
+                            <Select
+                              value={discoveryFilters.minRating || ''}
+                              onChange={(e) => handleDiscoveryFilterChange('minRating', e.target.value ? Number(e.target.value) : undefined)}
+                              label="Minimum Rating"
+                            >
+                              <MenuItem value="">Any Rating</MenuItem>
+                              <MenuItem value={1}>1+ Stars</MenuItem>
+                              <MenuItem value={2}>2+ Stars</MenuItem>
+                              <MenuItem value={3}>3+ Stars</MenuItem>
+                              <MenuItem value={4}>4+ Stars</MenuItem>
+                              <MenuItem value={5}>5+ Stars</MenuItem>
+                              <MenuItem value={6}>6+ Stars</MenuItem>
+                              <MenuItem value={7}>7+ Stars</MenuItem>
+                              <MenuItem value={8}>8+ Stars</MenuItem>
+                              <MenuItem value={9}>9+ Stars</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          {/* Min Vote Count */}
+                          <FormControl fullWidth>
+                            <InputLabel>Minimum Vote Count</InputLabel>
+                            <Select
+                              value={discoveryFilters.minVoteCount || 10}
+                              onChange={(e) => handleDiscoveryFilterChange('minVoteCount', Number(e.target.value))}
+                              label="Minimum Vote Count"
+                            >
+                              <MenuItem value={10}>10+ votes</MenuItem>
+                              <MenuItem value={50}>50+ votes</MenuItem>
+                              <MenuItem value={100}>100+ votes</MenuItem>
+                              <MenuItem value={500}>500+ votes</MenuItem>
+                              <MenuItem value={1000}>1000+ votes</MenuItem>
+                              <MenuItem value={5000}>5000+ votes</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          {/* Sort By */}
+                          <FormControl fullWidth>
+                            <InputLabel>Sort By</InputLabel>
+                            <Select
+                              value={discoveryFilters.sortBy || 'popularity'}
+                              onChange={(e) => handleDiscoveryFilterChange('sortBy', e.target.value as any)}
+                              label="Sort By"
+                            >
+                              <MenuItem value="popularity">Popularity</MenuItem>
+                              <MenuItem value="vote_average">Rating</MenuItem>
+                              <MenuItem value="release_date">Release Date</MenuItem>
+                              <MenuItem value="title">Title</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          {/* Adult Content Toggle */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={discoveryFilters.adult ?? true}
+                                  onChange={(e) => handleDiscoveryFilterChange('adult', e.target.checked)}
+                                />
+                              }
+                              label="Include Adult Content"
+                            />
+                          </Box>
+                        </Box>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={handleDiscoverySearch}
+                    disabled={loading.isLoading}
+                    startIcon={loading.isLoading ? <CircularProgress size={20} /> : <DiscoverIcon />}
+                  >
+                    {loading.isLoading ? 'Discovering...' : 'Discover Movies'}
+                  </Button>
+                  {hasActiveDiscoveryFilters() && (
+                    <Button
+                      variant="outlined"
+                      onClick={clearDiscoveryFilters}
+                      startIcon={<ClearIcon />}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          </Box>
+
+          {hasActiveDiscoveryFilters() && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Discovery Results
+                {pagination.totalResults > 0 && (
+                  <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    ({pagination.totalResults} results)
+                  </Typography>
+                )}
+              </Typography>
+              {loading.isLoading ? (
+                <Box display="flex" justifyContent="center" py={4}>
+                  <CircularProgress />
+                </Box>
+              ) : searchResults.length > 0 ? (
+                <>
+                  <MovieList 
+                    movies={searchResults} 
+                    showLikeButtons={true}
+                    onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
+                  />
+                  
+                  {/* Pagination */}
+                  {pagination.totalPages > 1 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            const newPage = Math.max(1, discoveryPage - 1);
+                            setDiscoveryPage(newPage);
+                            updateDiscoveryURL(discoveryFilters, newPage);
+                            dispatch(discoverMovies({ filters: discoveryFilters, page: newPage }));
+                          }}
+                          disabled={discoveryPage <= 1 || loading.isLoading}
+                        >
+                          Previous
+                        </Button>
+                        
+                        {/* Page numbers - show max 10 pages */}
+                        {Array.from({ length: Math.min(10, pagination.totalPages) }, (_, i) => {
+                          const pageNumber = i + 1;
+                          return (
+                            <Button
+                              key={pageNumber}
+                              variant={discoveryPage === pageNumber ? "contained" : "outlined"}
+                              onClick={() => {
+                                setDiscoveryPage(pageNumber);
+                                updateDiscoveryURL(discoveryFilters, pageNumber);
+                                dispatch(discoverMovies({ filters: discoveryFilters, page: pageNumber }));
+                              }}
+                              disabled={loading.isLoading}
+                              sx={{ minWidth: 40 }}
+                            >
+                              {pageNumber}
+                            </Button>
+                          );
+                        })}
+                        
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            const newPage = Math.min(pagination.totalPages, discoveryPage + 1);
+                            setDiscoveryPage(newPage);
+                            updateDiscoveryURL(discoveryFilters, newPage);
+                            dispatch(discoverMovies({ filters: discoveryFilters, page: newPage }));
+                          }}
+                          disabled={discoveryPage >= pagination.totalPages || loading.isLoading}
+                        >
+                          Next
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </>
+              ) : (
+                <Box textAlign="center" py={4}>
+                  <Typography variant="h6" color="text.secondary">
+                    No movies found with these filters
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Try adjusting your filters to find more movies.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {!hasActiveDiscoveryFilters() && (
+            <Box textAlign="center" py={8}>
+              <DiscoverIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
+                Discover Movies
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Use the filters above to discover movies by genre, release date, rating, and more.
+              </Typography>
+            </Box>
+          )}
+        </TabPanel>
     </Container>
   );
 };
 
 export default SearchPage;
-

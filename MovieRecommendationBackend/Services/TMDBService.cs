@@ -44,7 +44,7 @@ public class TMDBService : ITMDBService
         }
         else
         {
-            _logger.LogInformation("TMDB API success response content: {Content}", content);
+            _logger.LogInformation("TMDB API success url: {url} response: {Content}",url, content);
             return content;
         }
         return "{}";
@@ -186,25 +186,14 @@ public class TMDBService : ITMDBService
                 "title" => "title",
                 _ => "popularity"
             };
-            queryParams.Add($"sort_by={sortBy}");
+            queryParams.Add($"sort_by={sortBy}.desc");
         }
         
-        // Add sort order
-        if (!string.IsNullOrWhiteSpace(request.SortOrder))
+        // Add genre filters (support multiple genres)
+        if (request.Genres != null && request.Genres.Any())
         {
-            var sortOrder = request.SortOrder.ToLower() switch
-            {
-                "asc" => "asc",
-                "desc" => "desc",
-                _ => "desc"
-            };
-            queryParams.Add($"sort_order={sortOrder}");
-        }
-        
-        // Add genre filter
-        if (request.Genre.HasValue)
-        {
-            queryParams.Add($"with_genres={request.Genre.Value}");
+            var genreIds = string.Join(",", request.Genres);
+            queryParams.Add($"with_genres={genreIds}");
         }
         
         // Add release date filters
@@ -236,9 +225,12 @@ public class TMDBService : ITMDBService
             queryParams.Add($"vote_average.gte={request.MinRating.Value}");
         }
         
-        if (request.MaxRating.HasValue)
+        // Remove max rating filter - only use min rating
+        
+        // Add vote count filter
+        if (request.MinVoteCount.HasValue)
         {
-            queryParams.Add($"vote_average.lte={request.MaxRating.Value}");
+            queryParams.Add($"vote_count.gte={request.MinVoteCount.Value}");
         }
         
         // Add runtime filters
@@ -372,7 +364,7 @@ public class TMDBService : ITMDBService
         {
             foreach (var movie in results)
             {
-                if (!string.IsNullOrEmpty(movie.BackdropPath) && !string.IsNullOrEmpty(movie.PosterPath) && movie.VoteCount > 10)
+                if (true)
                 {
                     movies.Add(await MapToMovieDto(movie));
                 }

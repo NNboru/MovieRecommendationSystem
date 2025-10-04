@@ -134,19 +134,12 @@ export interface AuthResponse {
 
 export interface SearchFilters {
   query?: string;
-  genre?: number;
-  releaseDateFrom?: string;
-  releaseDateTo?: string;
-  language?: string;
+  genres?: number[]; // Support multiple genres
+  releaseYear?: number; // Simple year filter
   minRating?: number;
-  maxRating?: number;
-  year?: number;
-  minRuntime?: number;
-  maxRuntime?: number;
+  minVoteCount?: number;
   adult?: boolean;
-  certification?: string;
   sortBy?: 'popularity' | 'vote_average' | 'release_date' | 'title';
-  sortOrder?: 'asc' | 'desc';
 }
 
 // Component Props types
