@@ -372,7 +372,7 @@ public class TMDBService : ITMDBService
         {
             foreach (var movie in results)
             {
-                if (!string.IsNullOrEmpty(movie.BackdropPath) && !string.IsNullOrEmpty(movie.PosterPath))
+                if (!string.IsNullOrEmpty(movie.BackdropPath) && !string.IsNullOrEmpty(movie.PosterPath) && movie.VoteCount > 10)
                 {
                     movies.Add(await MapToMovieDto(movie));
                 }
