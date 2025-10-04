@@ -165,7 +165,7 @@ public class TMDBService : ITMDBService
         return await MapResultsToMovies(result?.Results);
     }
 
-    public async Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request)
+    public async Task<DiscoverMoviesResult> DiscoverMoviesAsync(DiscoverMoviesRequest request)
     {
         var queryParams = new List<string>();
         
@@ -272,7 +272,15 @@ public class TMDBService : ITMDBService
             var searchMovies = await MapResultsToMovies(result?.Results);
             
             // Apply additional filters on the search results
-            return ApplyClientSideFilters(searchMovies, request);
+            var filteredMovies = ApplyClientSideFilters(searchMovies, request);
+            
+            return new DiscoverMoviesResult
+            {
+                Movies = filteredMovies,
+                Page = result?.Page ?? 1,
+                TotalPages = result?.TotalPages ?? 1,
+                TotalResults = result?.TotalResults ?? 0
+            };
         }
         
         // Build the discover URL
@@ -281,7 +289,15 @@ public class TMDBService : ITMDBService
         string discoverContent = await ApiCall(discoverUrl);
         var discoverResult = JsonConvert.DeserializeObject<TMDBResponse>(discoverContent);
         
-        return await MapResultsToMovies(discoverResult?.Results);
+        var movies = await MapResultsToMovies(discoverResult?.Results);
+        
+        return new DiscoverMoviesResult
+        {
+            Movies = movies,
+            Page = discoverResult?.Page ?? 1,
+            TotalPages = discoverResult?.TotalPages ?? 1,
+            TotalResults = discoverResult?.TotalResults ?? 0
+        };
     }
     
     private static List<MovieDto> ApplyClientSideFilters(List<MovieDto> movies, DiscoverMoviesRequest request)
@@ -392,6 +408,15 @@ public class TMDBService : ITMDBService
     {
         [JsonProperty("results")]
         public List<TMDBMovie>? Results { get; set; }
+        
+        [JsonProperty("page")]
+        public int Page { get; set; }
+        
+        [JsonProperty("total_pages")]
+        public int TotalPages { get; set; }
+        
+        [JsonProperty("total_results")]
+        public int TotalResults { get; set; }
     }
 
     private class TMDBMovie

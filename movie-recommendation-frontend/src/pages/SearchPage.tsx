@@ -32,7 +32,7 @@ import {
   MovieFilter as DiscoverIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { textSearchMovies, discoverMovies, fetchGenres } from '../store/slices/movieSlice';
+import { textSearchMovies, discoverMovies } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
 import { Movie, SearchFilters } from '../types';
 
@@ -89,9 +89,6 @@ const SearchPage: React.FC = () => {
   const [discoveryPage, setDiscoveryPage] = useState(1);
 
   useEffect(() => {
-    // Fetch genres on component mount
-    dispatch(fetchGenres());
-    
     // Determine initial tab based on URL params
     const query = searchParams.get('q');
     const hasFilters = searchParams.get('genre') || searchParams.get('language') || 
@@ -290,6 +287,7 @@ const SearchPage: React.FC = () => {
                 <MovieList 
                   movies={searchResults} 
                   showLikeButtons={true}
+                  showWatchlistButton={true}
                   onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
                 />
               ) : (
@@ -477,7 +475,7 @@ const SearchPage: React.FC = () => {
             </Accordion>
           </Box>
 
-          {hasActiveDiscoveryFilters() && (
+          {searchResults.length > 0 && (
             <Box>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Discovery Results
@@ -496,6 +494,7 @@ const SearchPage: React.FC = () => {
                   <MovieList 
                     movies={searchResults} 
                     showLikeButtons={true}
+                    showWatchlistButton={true}
                     onMovieClick={(movie) => navigate(`/movie/${movie.tmdbId}`)}
                   />
                   
@@ -565,7 +564,7 @@ const SearchPage: React.FC = () => {
             </Box>
           )}
 
-          {!hasActiveDiscoveryFilters() && (
+          {searchResults.length == 0 && (
             <Box textAlign="center" py={8}>
               <DiscoverIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
               <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>

@@ -5,7 +5,12 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './hooks/redux';
-import { fetchGenres } from './store/slices/movieSlice';
+import { 
+  fetchGenres, 
+  fetchTrendingMovies, 
+  fetchPopularMovies, 
+  fetchTopRatedMovies 
+} from './store/slices/movieSlice';
 import { fetchCurrentUser } from './store/slices/authSlice';
 import { fetchWatchlist } from './store/slices/watchlistSlice';
 import { fetchLikeList } from './store/slices/likeListSlice';
@@ -78,8 +83,11 @@ const AppContent: React.FC = () => {
   const { isAuthenticated, user, token } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    // Fetch genres on app load
+    // Fetch genres and movies on app load
     dispatch(fetchGenres());
+    dispatch(fetchTrendingMovies(1));
+    dispatch(fetchPopularMovies(1));
+    dispatch(fetchTopRatedMovies(1));
 
     // If we have a token but no user data, fetch current user
     if (token && !user) {

@@ -1,19 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import {
-  fetchTrendingMovies,
-  fetchPopularMovies,
-  fetchTopRatedMovies,
-} from '../store/slices/movieSlice';
+import { useAppSelector } from '../hooks/redux';
+// Movies are fetched in App.tsx
 import MovieList from '../components/movies/MovieList';
 import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 import HeroSection from '../components/home/HeroSection';
 import { Movie } from '../types';
 
 const HomePage: React.FC = () => {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const {
     trendingMovies,
@@ -28,12 +23,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // Fetch all movie categories on component mount
-    dispatch(fetchTrendingMovies(1));
-    dispatch(fetchPopularMovies(1));
-    dispatch(fetchTopRatedMovies(1));
-  }, [dispatch]);
+  // Movies are fetched in App.tsx on app load
 
   if (loading.isLoading && !trendingMovies.length) {
     return (

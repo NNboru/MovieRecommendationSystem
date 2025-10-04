@@ -179,8 +179,14 @@ public class MoviesController : ControllerBase
                 Page = page
             };
 
-            var movies = await _tmdbService.DiscoverMoviesAsync(discoverRequest);
-            return Ok(CreateUIResponse(movies));
+            var result = await _tmdbService.DiscoverMoviesAsync(discoverRequest);
+            return Ok(new DefaultResponse
+            {
+                Data = result.Movies,
+                Page = result.Page,
+                TotalPages = result.TotalPages,
+                TotalResults = result.TotalResults
+            });
         }
         catch (Exception ex)
         {

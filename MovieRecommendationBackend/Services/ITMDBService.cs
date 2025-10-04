@@ -13,7 +13,7 @@ public interface ITMDBService
     Task<List<MovieDto>> GetMoviesByGenreAsync(int genreId, int page = 1);
     Task<List<MovieDto>> GetRecommendationsAsync(int movieId, int page = 1);
     Task<List<MovieDto>> GetSimilarMoviesAsync(int movieId, int page = 1);
-    Task<List<MovieDto>> DiscoverMoviesAsync(DiscoverMoviesRequest request);
+    Task<DiscoverMoviesResult> DiscoverMoviesAsync(DiscoverMoviesRequest request);
 }
 
 public class DiscoverMoviesRequest
@@ -34,6 +34,14 @@ public class DiscoverMoviesRequest
     public string? SortOrder { get; set; }
     public int? MinVoteCount { get; set; } // Add vote count filter
     public int Page { get; set; } = 1;
+}
+
+public class DiscoverMoviesResult
+{
+    public List<MovieDto> Movies { get; set; } = new List<MovieDto>();
+    public int Page { get; set; }
+    public int TotalPages { get; set; }
+    public int TotalResults { get; set; }
 }
 
 
