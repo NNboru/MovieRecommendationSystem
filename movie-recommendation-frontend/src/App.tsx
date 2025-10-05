@@ -9,7 +9,8 @@ import {
   fetchGenres, 
   fetchTrendingMovies, 
   fetchPopularMovies, 
-  fetchTopRatedMovies 
+  fetchTopRatedMovies,
+  fetchPersonalizedRecommendations
 } from './store/slices/movieSlice';
 import { fetchCurrentUser } from './store/slices/authSlice';
 import { fetchWatchlist } from './store/slices/watchlistSlice';
@@ -96,10 +97,11 @@ const AppContent: React.FC = () => {
   }, [dispatch, token, user]);
 
   useEffect(() => {
-    // Fetch watchlist and like list when user is authenticated
+    // Fetch watchlist, like list, and personalized recommendations when user is authenticated
     if (isAuthenticated && user) {
       dispatch(fetchWatchlist());
       dispatch(fetchLikeList());
+      dispatch(fetchPersonalizedRecommendations(1));
     }
   }, [dispatch, isAuthenticated, user]);
 

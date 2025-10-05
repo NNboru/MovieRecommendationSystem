@@ -206,3 +206,28 @@ export interface AddToLikeListRequest {
   MovieId: number;
   Status: LikeStatus;
 }
+
+// Recommendation types
+export const RecommendationStrategy = {
+  InsufficientData: 0,
+  Advanced: 1
+} as const;
+
+export type RecommendationStrategy = typeof RecommendationStrategy[keyof typeof RecommendationStrategy];
+
+export interface RecommendationResult {
+  movies: Movie[];
+  strategy: RecommendationStrategy;
+  message: string;
+  page: number;
+  totalPages: number;
+  totalResults: number;
+}
+
+export interface UserRecommendationData {
+  likedCount: number;
+  dislikedCount: number;
+  strategy: RecommendationStrategy;
+  likedMovies: Movie[];
+  dislikedMovies: Movie[];
+}

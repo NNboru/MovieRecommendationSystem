@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Movie, Genre, SearchFilters } from '../../types';
-import { movieApi } from '../../services/api';
+import { Movie, Genre, SearchFilters, RecommendationStrategy } from '../../types';
+import { movieApi, recommendationApi } from '../../services/api';
 
 interface MovieState {
   movies: Movie[];
@@ -14,6 +14,9 @@ interface MovieState {
   loading: {
     isLoading: boolean;
     error?: string;
+    popular: boolean;
+    topRated: boolean;
+    recommendations: boolean;
   };
   searchFilters: SearchFilters;
   pagination: {
@@ -33,6 +36,15 @@ interface MovieState {
   };
   currentPopularPage: number;
   currentTopRatedPage: number;
+  recommendations: Movie[];
+  recommendationStrategy: RecommendationStrategy;
+  recommendationMessage: string;
+  recommendationPagination: {
+    page: number;
+    totalPages: number;
+    totalResults: number;
+  };
+  currentRecommendationPage: number;
 }
 
 const initialState: MovieState = {
@@ -46,6 +58,10 @@ const initialState: MovieState = {
   watchlist: [],
   loading: {
     isLoading: false,
+    error: undefined,
+    popular: false,
+    topRated: false,
+    recommendations: false,
   },
   searchFilters: {},
   pagination: {
@@ -65,6 +81,15 @@ const initialState: MovieState = {
   },
   currentPopularPage: 1,
   currentTopRatedPage: 1,
+  recommendations: [],
+  recommendationStrategy: RecommendationStrategy.InsufficientData,
+  recommendationMessage: '',
+  recommendationPagination: {
+    page: 1,
+    totalPages: 1,
+    totalResults: 0,
+  },
+  currentRecommendationPage: 1,
 };
 
 // Async thunks
@@ -104,6 +129,15 @@ export const discoverMovies = createAsyncThunk(
   'movies/discover',
   async ({ filters, page = 1 }: { filters: Omit<SearchFilters, 'query'>; page?: number }) => {
     const response = await movieApi.discoverMovies(filters, page);
+    return response;
+  }
+);
+
+// Recommendation thunks
+export const fetchPersonalizedRecommendations = createAsyncThunk(
+  'movies/fetchPersonalizedRecommendations',
+  async (page: number = 1) => {
+    const response = await recommendationApi.getPersonalizedRecommendations(page);
     return response;
   }
 );
@@ -190,11 +224,11 @@ const movieSlice = createSlice({
       })
       // Fetch popular movies
       .addCase(fetchPopularMovies.pending, (state) => {
-        state.loading.isLoading = true;
+        state.loading.popular = true;
         state.loading.error = undefined;
       })
       .addCase(fetchPopularMovies.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.popular = false;
         state.popularMovies = action.payload.data;
         state.popularPagination = {
           page: action.payload.page,
@@ -204,16 +238,16 @@ const movieSlice = createSlice({
         state.currentPopularPage = action.payload.page;
       })
       .addCase(fetchPopularMovies.rejected, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.popular = false;
         state.loading.error = action.error.message;
       })
       // Fetch top rated movies
       .addCase(fetchTopRatedMovies.pending, (state) => {
-        state.loading.isLoading = true;
+        state.loading.topRated = true;
         state.loading.error = undefined;
       })
       .addCase(fetchTopRatedMovies.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.topRated = false;
         state.topRatedMovies = action.payload.data;
         state.topRatedPagination = {
           page: action.payload.page,
@@ -223,7 +257,7 @@ const movieSlice = createSlice({
         state.currentTopRatedPage = action.payload.page;
       })
       .addCase(fetchTopRatedMovies.rejected, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.topRated = false;
         state.loading.error = action.error.message;
       })
       // Text search
@@ -292,6 +326,27 @@ const movieSlice = createSlice({
         state.watchlist = state.watchlist.filter(
           (movie) => movie.tmdbId !== action.payload.movieId
         );
+      })
+      // Fetch personalized recommendations
+      .addCase(fetchPersonalizedRecommendations.pending, (state) => {
+        state.loading.recommendations = true;
+        state.loading.error = undefined;
+      })
+      .addCase(fetchPersonalizedRecommendations.fulfilled, (state, action) => {
+        state.loading.recommendations = false;
+        state.recommendations = action.payload.movies;
+        state.recommendationStrategy = action.payload.strategy;
+        state.recommendationMessage = action.payload.message;
+        state.recommendationPagination = {
+          page: action.payload.page,
+          totalPages: action.payload.totalPages,
+          totalResults: action.payload.totalResults,
+        };
+        state.currentRecommendationPage = action.payload.page;
+      })
+      .addCase(fetchPersonalizedRecommendations.rejected, (state, action) => {
+        state.loading.recommendations = false;
+        state.loading.error = action.error.message;
       });
   },
 });

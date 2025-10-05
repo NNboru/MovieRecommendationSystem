@@ -12,6 +12,8 @@ import {
   PaginatedResponse,
   LikeListItem,
   LikeStatus,
+  RecommendationResult,
+  UserRecommendationData,
 } from '../types';
 
 // API Configuration
@@ -228,5 +230,22 @@ export const likeListApi = {
     return response.data;
   },
 
+};
+
+// Recommendation API
+export const recommendationApi = {
+  getPersonalizedRecommendations: async (page: number = 1): Promise<RecommendationResult> => {
+    const response: AxiosResponse<RecommendationResult> = await apiClient.get(
+      `/recommendations/personalized?page=${page}`
+    );
+    return response.data;
+  },
+
+  getUserRecommendationData: async (): Promise<UserRecommendationData> => {
+    const response: AxiosResponse<UserRecommendationData> = await apiClient.get(
+      '/recommendations/user-data'
+    );
+    return response.data;
+  },
 };
 

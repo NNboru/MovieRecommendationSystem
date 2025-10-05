@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
-import { fetchPopularMovies, fetchTopRatedMovies } from '../store/slices/movieSlice';
+import { fetchPopularMovies, fetchTopRatedMovies, fetchPersonalizedRecommendations } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
 import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 import HeroSection from '../components/home/HeroSection';
+import RecommendationsSection from '../components/recommendations/RecommendationsSection';
 import Pagination from '../components/ui/Pagination';
 import { Movie } from '../types';
 
@@ -35,6 +36,10 @@ const HomePage: React.FC = () => {
 
   const handleTopRatedPageChange = (page: number) => {
     dispatch(fetchTopRatedMovies(page));
+  };
+
+  const handleRecommendationPageChange = (page: number) => {
+    dispatch(fetchPersonalizedRecommendations(page));
   };
 
   if (loading.isLoading && !trendingMovies.length) {
@@ -77,12 +82,18 @@ const HomePage: React.FC = () => {
           )}
         </Box>
 
+        {/* Recommendations for You */}
+        <RecommendationsSection 
+          onMovieClick={handleMovieClick} 
+          onPageChange={handleRecommendationPageChange}
+        />
+
         {/* Popular Movies */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Popular Movies
           </Typography>
-          {loading.isLoading ? (
+          {loading.popular ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
             </Box>
@@ -99,7 +110,7 @@ const HomePage: React.FC = () => {
                 totalPages={popularPagination.totalPages}
                 totalResults={popularPagination.totalResults}
                 onPageChange={handlePopularPageChange}
-                disabled={loading.isLoading}
+                disabled={loading.popular}
               />
             </>
           )}
@@ -112,7 +123,7 @@ const HomePage: React.FC = () => {
           </Typography>
           <MovieList
             movies={topRatedMovies}
-            loading={loading.isLoading}
+            loading={loading.topRated}
             showWatchlistButton={true}
             showLikeButtons={true}
             onMovieClick={handleMovieClick}
@@ -122,7 +133,7 @@ const HomePage: React.FC = () => {
             totalPages={topRatedPagination.totalPages}
             totalResults={topRatedPagination.totalResults}
             onPageChange={handleTopRatedPageChange}
-            disabled={loading.isLoading}
+            disabled={loading.topRated}
           />
         </Box>
       </Container>

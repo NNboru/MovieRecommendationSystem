@@ -63,6 +63,7 @@ builder.Services.AddHttpClient();
 
 // Register services
 builder.Services.AddScoped<ITMDBService, TMDBService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<DatabaseSeederService>();
 
