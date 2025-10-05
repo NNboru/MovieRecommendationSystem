@@ -37,6 +37,8 @@ public class UserProfile
 {
     public Dictionary<int, double> GenreWeights { get; set; } = new();
     public Dictionary<int, double> AvoidedGenres { get; set; } = new();
+    public Dictionary<string, double> ProductionCompanyWeights { get; set; } = new();
+    public Dictionary<string, double> KeywordWeights { get; set; } = new();
     public YearPreference YearPreferences { get; set; } = new();
     public RatingPreference RatingPreferences { get; set; } = new();
     public List<int> AvoidedMovieIds { get; set; } = new();
@@ -63,4 +65,6 @@ public class ScoredMovie
     public double GenreScore { get; set; }
     public double YearScore { get; set; }
     public double RatingScore { get; set; }
+    public double ProductionCompanyScore { get; set; }
+    public double KeywordScore { get; set; }
 }

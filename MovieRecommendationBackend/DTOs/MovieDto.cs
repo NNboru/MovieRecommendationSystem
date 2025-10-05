@@ -18,8 +18,10 @@ public class MovieDto
     public int? Runtime { get; set; }
     public string? Certification { get; set; }
     public List<string> Genres { get; set; } = new List<string>();
-    public List<string> ProductionCompanies { get; set; } = new List<string>();
-    public List<string> Keywords { get; set; } = new List<string>();
+    public List<string>? ProductionCompanies { get; set; } = new List<string>();
+    public List<string>? Keywords { get; set; } = new List<string>();
+    public List<string>? ProductionCompaniesNames { get; set; } = new List<string>();
+    public List<string>? KeywordsNames { get; set; } = new List<string>();
     public string? TrailerId { get; set; }
     public double? UserRating { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -33,6 +33,8 @@ public class DiscoverMoviesRequest
     public string? SortBy { get; set; }
     public string? SortOrder { get; set; }
     public int? MinVoteCount { get; set; } // Add vote count filter
+    public string? ProductionCompanies { get; set; } // Support multiple production companies
+    public string? Keywords { get; set; } // Support multiple keywords
     public int Page { get; set; } = 1;
 }
 

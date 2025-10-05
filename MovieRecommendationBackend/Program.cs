@@ -65,7 +65,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ITMDBService, TMDBService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<DatabaseSeederService>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -123,9 +122,6 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
-    
-    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeederService>();
-    await seeder.SeedAsync();
 }
 
 app.Run();

@@ -288,6 +288,18 @@ public class TMDBService : ITMDBService
             queryParams.Add($"certification={request.Certification}");
         }
         
+        // Add production company filters (support multiple companies)
+        if (!string.IsNullOrWhiteSpace(request.ProductionCompanies))
+        {
+            queryParams.Add($"with_companies={request.ProductionCompanies}");
+        }
+        
+        // Add keyword filters (support multiple keywords)
+        if (!string.IsNullOrWhiteSpace(request.Keywords))
+        {
+            queryParams.Add($"with_keywords={request.Keywords}");
+        }
+        
         // Handle text search - if query is provided, use search endpoint instead
         if (!string.IsNullOrWhiteSpace(request.Query))
         {
@@ -372,6 +384,8 @@ public class TMDBService : ITMDBService
             Genres = await MapGenreIdsToNames(movie),
             ProductionCompanies = MapProductionCompanies(movie),
             Keywords = MapKeywords(movie),
+            ProductionCompaniesNames = MapProductionCompaniesNames(movie),
+            KeywordsNames = MapKeywordsNames(movie),
             TrailerId = GetTrailerId(movie),
         };
     }
@@ -426,10 +440,20 @@ public class TMDBService : ITMDBService
 
     private static List<string> MapProductionCompanies(TMDBMovie movie)
     {
-        return movie.ProductionCompanies?.Select(pc => pc.Name).ToList() ?? new List<string>();
+        return movie.ProductionCompanies?.Select(pc => pc.Id.ToString()).ToList() ?? new List<string>();
     }
 
     private static List<string> MapKeywords(TMDBMovie movie)
+    {
+        return movie.Keywords?.Keywords?.Select(k => k.Id.ToString()).ToList() ?? new List<string>();
+    }
+
+    private static List<string> MapProductionCompaniesNames(TMDBMovie movie)
+    {
+        return movie.ProductionCompanies?.Select(pc => pc.Name).ToList() ?? new List<string>();
+    }
+
+    private static List<string> MapKeywordsNames(TMDBMovie movie)
     {
         return movie.Keywords?.Keywords?.Select(k => k.Name).ToList() ?? new List<string>();
     }

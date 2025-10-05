@@ -120,6 +120,12 @@ public class RecommendationService : IRecommendationService
         // Analyze rating preferences
         profile.RatingPreferences = CalculateRatingPreferences(likedMovies);
 
+        // Analyze production company preferences
+        profile.ProductionCompanyWeights = CalculateProductionCompanyWeights(likedMovies);
+
+        // Analyze keyword preferences
+        profile.KeywordWeights = CalculateKeywordWeights(likedMovies);
+
         // Build avoidance patterns
         profile.AvoidedMovieIds = dislikedMovies.Select(m => m.TMDBId).ToList();
 
@@ -171,35 +177,6 @@ public class RecommendationService : IRecommendationService
         }
 
         return genreWeights;
-    }
-
-    private Dictionary<int, double> CalculateAvoidedGenres(List<MovieDto> dislikedMovies)
-    {
-        var genreCounts = new Dictionary<int, int>();
-
-        foreach (var movie in dislikedMovies)
-        {
-            var movieGenres = GetMovieGenreIds(movie);
-
-            foreach (var genreId in movieGenres)
-            {
-                if (!genreCounts.ContainsKey(genreId))
-                {
-                    genreCounts[genreId] = 0;
-                }
-
-                genreCounts[genreId]++;
-            }
-        }
-
-        // Calculate avoidance weights
-        var totalMovies = dislikedMovies.Count;
-        if (totalMovies == 0) return new Dictionary<int, double>();
-
-        return genreCounts.ToDictionary(
-            kv => kv.Key,
-            kv => (double)kv.Value / totalMovies
-        );
     }
 
     private static YearPreference CalculateYearPreferences(List<MovieDto> likedMovies, List<MovieDto> dislikedMovies)
@@ -260,6 +237,60 @@ public class RecommendationService : IRecommendationService
         };
     }
 
+    private static Dictionary<string, double> CalculateProductionCompanyWeights(List<MovieDto> likedMovies)
+    {
+        var companyCounts = new Dictionary<string, int>();
+
+        foreach (var movie in likedMovies)
+        {
+            foreach (var company in movie.ProductionCompanies ?? [])
+            {
+                if (companyCounts.ContainsKey(company))
+                {
+                    companyCounts[company]++;
+                }
+                else
+                {
+                    companyCounts[company] = 1;
+                }
+            }
+        }
+
+        // Convert counts to weights (normalize by total movies)
+        var totalMovies = likedMovies.Count;
+        return companyCounts.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (double)kvp.Value / totalMovies
+        );
+    }
+
+    private static Dictionary<string, double> CalculateKeywordWeights(List<MovieDto> likedMovies)
+    {
+        var keywordCounts = new Dictionary<string, int>();
+
+        foreach (var movie in likedMovies)
+        {
+            foreach (var keyword in movie.Keywords ?? [])
+            {
+                if (keywordCounts.ContainsKey(keyword))
+                {
+                    keywordCounts[keyword]++;
+                }
+                else
+                {
+                    keywordCounts[keyword] = 1;
+                }
+            }
+        }
+
+        // Convert counts to weights (normalize by total movies)
+        var totalMovies = likedMovies.Count;
+        return keywordCounts.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (double)kvp.Value / totalMovies
+        );
+    }
+
     private async Task<DiscoverMoviesResult> GenerateCandidateMovies(UserProfile profile, int page)
     {
         // Get top preferred genres
@@ -284,6 +315,8 @@ public class RecommendationService : IRecommendationService
             MinRating = profile.RatingPreferences.MinRating,
             MinVoteCount = 100,
             SortBy = "vote_average",
+            ProductionCompanies = string.Join('|', profile.ProductionCompanyWeights.Keys),
+            Keywords = string.Join('|', profile.KeywordWeights.Keys),
             Page = page
         };
 
@@ -310,17 +343,25 @@ public class RecommendationService : IRecommendationService
         {
             var score = 0.0;
 
-            // Genre matching score (40% weight)
+            // Genre matching score (30% weight)
             var genreScore = CalculateGenreScore(movie, profile.GenreWeights, profile.AvoidedGenres);
-            score += genreScore * 0.4;
+            score += genreScore * 0.3;
 
-            // Year preference score (20% weight)
+            // Production company matching score (20% weight)
+            var productionCompanyScore = CalculateProductionCompanyScore(movie, profile.ProductionCompanyWeights);
+            score += productionCompanyScore * 0.2;
+
+            // Keyword matching score (15% weight)
+            var keywordScore = CalculateKeywordScore(movie, profile.KeywordWeights);
+            score += keywordScore * 0.15;
+
+            // Year preference score (10% weight)
             var yearScore = CalculateYearScore(movie, profile.YearPreferences);
             score += yearScore * 0.1;
 
-            // Rating preference score (20% weight)
+            // Rating preference score (15% weight)
             var ratingScore = CalculateRatingScore(movie, profile.RatingPreferences);
-            score += ratingScore * 0.4;
+            score += ratingScore * 0.15;
 
             // Popularity score (10% weight)
             var popularityScore = CalculatePopularityScore(movie);
@@ -331,6 +372,8 @@ public class RecommendationService : IRecommendationService
                 Movie = movie,
                 Score = Math.Max(0, score),
                 GenreScore = genreScore,
+                ProductionCompanyScore = productionCompanyScore,
+                KeywordScore = keywordScore,
                 YearScore = yearScore,
                 RatingScore = ratingScore
             });
@@ -392,6 +435,48 @@ public class RecommendationService : IRecommendationService
     {
         var popularity = movie.Popularity ?? 0;
         return Math.Min(1.0, popularity / 1000.0); // Normalize popularity
+    }
+
+    private static double CalculateProductionCompanyScore(MovieDto movie, Dictionary<string, double> companyWeights)
+    {
+        if (!companyWeights.Any() || !(movie.ProductionCompanies?.Any() ?? true))
+            return 0.0;
+
+        var totalScore = 0.0;
+        var matchedCompanies = 0;
+
+        foreach (var company in movie.ProductionCompanies ?? [])
+        {
+            if (companyWeights.TryGetValue(company, out var weight))
+            {
+                totalScore += weight;
+                matchedCompanies++;
+            }
+        }
+
+        // Normalize by number of companies in the movie
+        return matchedCompanies > 0 ? totalScore / (movie.ProductionCompanies?.Count ?? 1) : 0.0;
+    }
+
+    private static double CalculateKeywordScore(MovieDto movie, Dictionary<string, double> keywordWeights)
+    {
+        if (!keywordWeights.Any() || !(movie.Keywords?.Any() ?? true))
+            return 0.0;
+
+        var totalScore = 0.0;
+        var matchedKeywords = 0;
+
+        foreach (var keyword in movie.Keywords ?? [])
+        {
+            if (keywordWeights.TryGetValue(keyword, out var weight))
+            {
+                totalScore += weight;
+                matchedKeywords++;
+            }
+        }
+
+        // Normalize by number of keywords in the movie
+        return matchedKeywords > 0 ? totalScore / (movie.Keywords?.Count ?? 1) : 0.0;
     }
 
     private static List<MovieDto> FilterAndRankRecommendations(List<ScoredMovie> scoredMovies, UserProfile profile)
@@ -475,8 +560,10 @@ public class RecommendationService : IRecommendationService
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
             Genres = movie.MovieGenres.Select(mg => mg.Genre.Name).ToList(),
+            TrailerId = movie.TrailerId,
+            ProductionCompanies = movie.ProductionCompanies?.Split(',').ToList(),
+            Keywords = movie.Keywords?.Split(',').ToList(),
             CreatedAt = movie.CreatedAt,
-            UpdatedAt = movie.UpdatedAt
         };
     }
 }

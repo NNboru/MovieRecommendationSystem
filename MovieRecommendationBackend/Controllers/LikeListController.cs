@@ -59,7 +59,6 @@ public class LikeListController : ControllerBase
                 Popularity = item.Movie.Popularity,
                 Genres = item.Movie.MovieGenres.Select(mg => mg.Genre.Name).ToList(),
                 CreatedAt = item.Movie.CreatedAt,
-                UpdatedAt = item.Movie.UpdatedAt
             },
             Status = item.Status,
             CreatedAt = item.CreatedAt,
@@ -103,8 +102,10 @@ public class LikeListController : ControllerBase
                 OriginalLanguage = tmdbMovies.OriginalLanguage,
                 OriginalTitle = tmdbMovies.OriginalTitle,
                 Popularity = tmdbMovies.Popularity,
+                TrailerId = tmdbMovies.TrailerId,
+                ProductionCompanies = string.Join(',', tmdbMovies.ProductionCompanies ?? []),
+                Keywords = string.Join(',', tmdbMovies.Keywords ?? []),
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Movies.Add(movie);
@@ -179,7 +180,6 @@ public class LikeListController : ControllerBase
                 Popularity = movie.Popularity,
                 Genres = movie.MovieGenres.Select(mg => mg.Genre.Name).ToList(),
                 CreatedAt = movie.CreatedAt,
-                UpdatedAt = movie.UpdatedAt
             },
             Status = dto.Status,
             CreatedAt = existingLike?.CreatedAt ?? DateTime.UtcNow,

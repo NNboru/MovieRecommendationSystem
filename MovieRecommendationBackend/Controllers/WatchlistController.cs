@@ -71,7 +71,6 @@ public class WatchlistController : ControllerBase
                         .Select(mg => mg.Genre.Name)
                         .ToList(),
                 CreatedAt = w.Movie.CreatedAt,
-                UpdatedAt = w.Movie.UpdatedAt
             }).ToList();
 
             return Ok(movieDtos);
@@ -126,7 +125,9 @@ public class WatchlistController : ControllerBase
                     Popularity = tmdbMovie.Popularity,
                     MovieGenres = [],
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    TrailerId = tmdbMovie.TrailerId,
+                    ProductionCompanies = string.Join(',', tmdbMovie.ProductionCompanies ?? []),
+                    Keywords = string.Join(',', tmdbMovie.Keywords ?? []),
                 };
 
                 // Add genres to the movie
@@ -205,7 +206,6 @@ public class WatchlistController : ControllerBase
                             .Select(mg => mg.Genre.Name)
                             .ToList(),
                         CreatedAt = w.Movie.CreatedAt,
-                        UpdatedAt = w.Movie.UpdatedAt
                     },
                     CreatedAt = w.CreatedAt
                 })
@@ -241,7 +241,7 @@ public class WatchlistController : ControllerBase
                 .FirstOrDefaultAsync(w => w.UserId == userId && w.MovieId == movie.Id);
             }
 
-            
+
             if (watchlistItem == null)
             {
                 return NotFound("Movie not found in your watchlist");
