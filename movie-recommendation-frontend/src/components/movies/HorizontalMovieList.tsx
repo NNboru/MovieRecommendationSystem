@@ -1,10 +1,7 @@
 import React, { useRef } from 'react';
-import { Box, Card, CardContent, CardMedia, Typography, Chip, Button, IconButton } from '@mui/material';
-import { Visibility as VisibilityIcon, Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, ThumbDown as ThumbDownIcon, ThumbDownOutlined as ThumbDownOutlinedIcon, ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { Movie, LikeStatus } from '../../types';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { addToLikeList, removeFromLikeList } from '../../store/slices/likeListSlice';
-import { addToWatchlist, removeFromWatchlist } from '../../store/slices/watchlistSlice';
+import { Box, Typography, IconButton } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { Movie } from '../../types';
 import MovieCard from './MovieCard';
 
 interface HorizontalMovieListProps {
@@ -17,52 +14,9 @@ interface HorizontalMovieListProps {
 const HorizontalMovieList: React.FC<HorizontalMovieListProps> = ({
   movies,
   onMovieClick,
-  showLikeButtons = true,
 }) => {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { movies: watchlist } = useAppSelector((state) => state.watchlist);
-  const { likeStatuses } = useAppSelector((state) => state.likeList);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const isInWatchlist = (movieId: number) => {
-    return watchlist.some((movie) => movie.tmdbId === movieId);
-  };
-
-
-  const handleWatchlistToggle = async (movie: Movie) => {
-    if (!isAuthenticated) {
-      return;
-    }
-
-    const inWatchlist = isInWatchlist(movie.tmdbId);
-    
-    if (inWatchlist) {
-      dispatch(removeFromWatchlist(movie.tmdbId));
-    } else {
-      dispatch(addToWatchlist(movie.tmdbId));
-    }
-  };
-
-  const handleLikeToggle = async (movie: Movie, status: LikeStatus) => {
-    if (!isAuthenticated) {
-      return;
-    }
-
-    try {
-      const currentStatus = likeStatuses[movie.tmdbId];
-      
-      if (currentStatus === status) {
-        // If already liked/disliked with same status, remove it
-        dispatch(removeFromLikeList(movie.tmdbId));
-      } else {
-        // Add or update like status
-        dispatch(addToLikeList({ movieId: movie.tmdbId, status }));
-      }
-    } catch (error) {
-      console.error('Error toggling like status:', error);
-    }
-  };
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {

@@ -69,7 +69,7 @@ const HomePage: React.FC = () => {
               {loading.error}
             </Alert>
           ) : loading.isLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 400 }}>
               <CircularProgress />
             </Box>
           ) : (
@@ -93,26 +93,24 @@ const HomePage: React.FC = () => {
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Popular Movies
           </Typography>
+          <Pagination
+            currentPage={currentPopularPage}
+            totalPages={popularPagination.totalPages}
+            totalResults={popularPagination.totalResults}
+            onPageChange={handlePopularPageChange}
+            disabled={loading.popular}
+          />
           {loading.popular ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 400 }}>
               <CircularProgress />
             </Box>
           ) : (
-            <>
-              <HorizontalMovieList
-                movies={popularMovies}
-                showWatchlistButton={true}
-                showLikeButtons={true}
-                onMovieClick={handleMovieClick}
-              />
-              <Pagination
-                currentPage={currentPopularPage}
-                totalPages={popularPagination.totalPages}
-                totalResults={popularPagination.totalResults}
-                onPageChange={handlePopularPageChange}
-                disabled={loading.popular}
-              />
-            </>
+            <HorizontalMovieList
+              movies={popularMovies}
+              showWatchlistButton={true}
+              showLikeButtons={true}
+              onMovieClick={handleMovieClick}
+            />
           )}
         </Box>
 
@@ -121,13 +119,6 @@ const HomePage: React.FC = () => {
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Top Rated Movies
           </Typography>
-          <MovieList
-            movies={topRatedMovies}
-            loading={loading.topRated}
-            showWatchlistButton={true}
-            showLikeButtons={true}
-            onMovieClick={handleMovieClick}
-          />
           <Pagination
             currentPage={currentTopRatedPage}
             totalPages={topRatedPagination.totalPages}
@@ -135,6 +126,16 @@ const HomePage: React.FC = () => {
             onPageChange={handleTopRatedPageChange}
             disabled={loading.topRated}
           />
+          {loading.topRated ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 400 }}>
+              <CircularProgress sx={{ height: 300 }} />
+            </Box>
+          ) : <HorizontalMovieList
+            movies={topRatedMovies}
+            showWatchlistButton={true}
+            showLikeButtons={true}
+            onMovieClick={handleMovieClick}
+          />}
         </Box>
       </Container>
     </Box>

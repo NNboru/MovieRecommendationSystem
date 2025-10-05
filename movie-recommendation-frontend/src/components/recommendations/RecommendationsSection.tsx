@@ -61,7 +61,7 @@ const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
         <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
           Recommendations for You
         </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 400 }}>
           <CircularProgress />
         </Box>
       </Box>
@@ -182,24 +182,23 @@ const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
         </Button>
       </Box>
 
+      {recommendations.length > 0 && recommendationPagination.totalPages > 1 && (
+        <Pagination
+          currentPage={currentRecommendationPage}
+          totalPages={recommendationPagination.totalPages}
+          totalResults={recommendationPagination.totalResults}
+          onPageChange={handlePageChange}
+          disabled={loading.recommendations}
+        />
+      )}
+
       {recommendations.length > 0 ? (
-        <>
-          <HorizontalMovieList
-            movies={recommendations}
-            showWatchlistButton={true}
-            showLikeButtons={true}
-            onMovieClick={onMovieClick}
-          />
-          {recommendationPagination.totalPages > 1 && (
-            <Pagination
-              currentPage={currentRecommendationPage}
-              totalPages={recommendationPagination.totalPages}
-              totalResults={recommendationPagination.totalResults}
-              onPageChange={handlePageChange}
-              disabled={loading.recommendations}
-            />
-          )}
-        </>
+        <HorizontalMovieList
+          movies={recommendations}
+          showWatchlistButton={true}
+          showLikeButtons={true}
+          onMovieClick={onMovieClick}
+        />
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>

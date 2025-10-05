@@ -69,7 +69,7 @@ const Pagination: React.FC<PaginationProps> = ({
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 3 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', my: 2 }}>
       {/* Page Info */}
       {showInfo && (
         <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
