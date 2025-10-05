@@ -1,207 +1,225 @@
-# Movie Recommendation System
+# 🎬 Movie Recommendation System
 
-A .NET 8.0 Web API backend for a movie recommendation system with PostgreSQL database and TMDB integration.
+A full-stack movie recommendation platform with personalized content-based filtering, built with .NET 8.0 Web API backend and React TypeScript frontend.
 
-## Features
+## ✨ Features
 
-- **Movie Management**: CRUD operations for movies with TMDB integration
-- **User Management**: User registration, authentication, and profile management
-- **Rating System**: Users can rate movies and leave comments
-- **Recommendation Engine**: Get movie recommendations based on TMDB data
-- **Genre Support**: Movie categorization by genres
-- **Search Functionality**: Search movies by title, genre, and popularity
+### 🔐 Authentication & User Management
+- JWT-based authentication with secure login/register
+- User profile management with password updates
+- Account deletion with confirmation
 
-## Tech Stack
+### 🎭 Movie Discovery
+- **Trending Movies** - Currently in theatres with pagination
+- **Popular Movies** - Most popular movies with pagination  
+- **Top Rated Movies** - Highest rated movies with pagination
+- **Personalized Recommendations** - AI-powered suggestions based on user preferences
+- **Advanced Search** - Text search and filter-based discovery with multiple criteria
 
-- **Backend**: .NET 8.0 Web API
-- **Database**: PostgreSQL with Entity Framework Core
-- **External API**: The Movie Database (TMDB) for movie data
-- **Authentication**: Basic password hashing (SHA256)
-- **Documentation**: Swagger/OpenAPI
+### 📱 Interactive Features
+- **Like/Dislike System** - Heart (like) and thumbs down (dislike) buttons
+- **Watchlist Management** - Save movies for later viewing
+- **Movie Details** - Comprehensive movie information with genres, production companies, keywords
+- **Trailer Integration** - YouTube trailer playback in modal
+- **Responsive Design** - Mobile-friendly UI with Material-UI components
 
-## Prerequisites
+### 🤖 Smart Recommendations
+- **Content-Based Filtering** - Analyzes user's liked movies
+- **Multi-Factor Scoring** - Genres (30%), Production Companies (20%), Keywords (15%), Rating (15%), Year (10%), Popularity (10%)
+- **Preference Learning** - Builds user profiles from interaction history
+- **Adaptive Algorithm** - Recommendations improve as users interact more
 
+## 🛠️ Tech Stack
+
+### Backend
+- **.NET 8.0 Web API** - RESTful API with Swagger documentation
+- **PostgreSQL** - Primary database with Entity Framework Core
+- **JWT Authentication** - Secure token-based authentication
+- **TMDB API Integration** - Real-time movie data, images, and metadata
+
+### Frontend
+- **React 18** with TypeScript - Modern UI framework
+- **Redux Toolkit** - State management with RTK Query
+- **Material-UI (MUI)** - Professional component library
+- **Axios** - HTTP client for API communication
+- **React Router** - Client-side routing
+
+## 🚀 Quick Start
+
+### Prerequisites
 - .NET 8.0 SDK
+- Node.js 18+ and npm
 - PostgreSQL database
-- TMDB API key (get one at [https://www.themoviedb.org/settings/api](https://www.themoviedb.org/settings/api))
+- TMDB API key ([Get one here](https://www.themoviedb.org/settings/api))
 
-## Setup Instructions
+### Backend Setup
 
-### 1. Clone the Repository
-
+1. **Clone and configure**:
 ```bash
-git clone <repository-url>
-cd MovieRecommendationSystem/MovieRecommendationBackend
+cd MovieRecommendationBackend
+cp appsettings.Development.json appsettings.json
 ```
 
-### 2. Configure Database
-
-1. Create a PostgreSQL database:
-```sql
-CREATE DATABASE MovieRecommendationDB;
-```
-
-2. Update `appsettings.json` with your database connection string:
+2. **Update `appsettings.json`**:
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Database=MovieRecommendationDB;Username=your_username;Password=your_password"
-  }
-}
-```
-
-### 3. Configure TMDB API
-
-1. Get your TMDB API key from [https://www.themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
-2. Update `appsettings.json` with your API key:
-```json
-{
+  },
+  "JwtSettings": {
+    "SecretKey": "your-super-secret-key-here-minimum-32-characters",
+    "Issuer": "MovieRecommendationSystem",
+    "Audience": "MovieRecommendationUsers",
+    "ExpirationHours": 24
+  },
   "TMDB": {
-    "ApiKey": "your_actual_tmdb_api_key_here",
+    "ApiKey": "your_tmdb_api_key_here",
     "BaseUrl": "https://api.themoviedb.org/3"
   }
 }
 ```
 
-### 4. Install Dependencies
-
+3. **Setup database and run**:
 ```bash
-dotnet restore
-```
-
-### 5. Run the Application
-
-```bash
+dotnet ef database update
 dotnet run
 ```
 
-The API will be available at `https://localhost:7000` (or the port shown in your terminal).
+### Frontend Setup
 
-## API Endpoints
-
-### Movies
-
-- `GET /api/movies` - Get all movies (paginated)
-- `GET /api/movies/{id}` - Get movie by ID
-- `GET /api/movies/popular` - Get popular movies from TMDB
-- `GET /api/movies/search?q={query}` - Search movies
-- `GET /api/movies/genre/{genreId}` - Get movies by genre
-- `GET /api/movies/{id}/recommendations` - Get movie recommendations
-- `POST /api/movies` - Create a new movie
-- `PUT /api/movies/{id}` - Update a movie
-- `DELETE /api/movies/{id}` - Delete a movie
-
-### Users
-
-- `GET /api/users` - Get all users
-- `GET /api/users/{id}` - Get user by ID
-- `POST /api/users` - Create a new user
-- `PUT /api/users/{id}` - Update a user
-- `DELETE /api/users/{id}` - Delete a user
-- `GET /api/users/{id}/ratings` - Get user's ratings
-
-### Ratings
-
-- `GET /api/ratings` - Get all ratings
-- `GET /api/ratings/{id}` - Get rating by ID
-- `GET /api/ratings/movie/{movieId}` - Get ratings for a specific movie
-- `POST /api/ratings?userId={id}&movieId={id}` - Create a rating
-- `PUT /api/ratings/{id}` - Update a rating
-- `DELETE /api/ratings/{id}` - Delete a rating
-- `GET /api/ratings/average/movie/{movieId}` - Get average rating for a movie
-
-## Database Schema
-
-The system includes the following entities:
-
-- **Movies**: Movie information with TMDB integration
-- **Genres**: Movie genres
-- **Users**: User accounts and profiles
-- **Ratings**: User movie ratings and comments
-- **MovieGenres**: Many-to-many relationship between movies and genres
-
-## Usage Examples
-
-### Create a User
-
+1. **Install dependencies and run**:
 ```bash
-curl -X POST "https://localhost:7000/api/users" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "firstName": "John",
-    "lastName": "Doe"
-  }'
+cd movie-recommendation-frontend
+npm install
+npm run dev
 ```
 
-### Rate a Movie
+2. **Access the application**:
+- Frontend: `http://localhost:5173`
+- Backend API: `https://localhost:7000`
+- Swagger UI: `https://localhost:7000/swagger`
 
-```bash
-curl -X POST "https://localhost:7000/api/ratings?userId=1&movieId=1" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "score": 5,
-    "comment": "Great movie! Highly recommended."
-  }'
-```
+## 📡 Key API Endpoints
 
-### Get Popular Movies
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update profile
+- `POST /api/auth/change-password` - Change password
+- `DELETE /api/auth/account` - Delete account
 
-```bash
-curl "https://localhost:7000/api/movies/popular"
-```
+### Movies & Discovery
+- `GET /api/movies/trending` - Trending movies
+- `GET /api/movies/popular?page={page}` - Popular movies (paginated)
+- `GET /api/movies/top-rated?page={page}` - Top rated movies (paginated)
+- `GET /api/movies/tmdb/{tmdbId}` - Movie details with videos
+- `GET /api/movies/text-search?q={query}&page={page}` - Text search
+- `GET /api/movies/discover` - Advanced filtering with multiple parameters
 
-### Search Movies
+### User Interactions
+- `GET /api/watchlist` - User's watchlist
+- `POST /api/watchlist` - Add to watchlist
+- `DELETE /api/watchlist/{movieId}` - Remove from watchlist
+- `GET /api/likelist` - User's liked/disliked movies
+- `POST /api/likelist` - Like/dislike a movie
+- `DELETE /api/likelist/{movieId}` - Remove like/dislike
 
-```bash
-curl "https://localhost:7000/api/movies/search?q=inception"
-```
+### Recommendations
+- `GET /api/recommendations/personalized?page={page}` - AI recommendations
+- `GET /api/recommendations/user-data` - User preference analysis
 
-## Development
+## 🎯 Advanced Features
 
-### Adding New Features
+### Smart Recommendation Engine
+- **User Profile Analysis** - Extracts preferences from liked movies
+- **Multi-Dimensional Scoring** - Considers genres, studios, themes, ratings, and years
+- **Production Company Matching** - Recommends movies from preferred studios
+- **Keyword Analysis** - Matches movies with similar themes and concepts
+- **Avoidance Patterns** - Learns what users don't like
 
-1. Create models in the `Models` folder
-2. Add DTOs in the `DTOs` folder
-3. Update `ApplicationDbContext` if needed
-4. Create controllers in the `Controllers` folder
-5. Add services in the `Services` folder if needed
+### Enhanced Search & Discovery
+- **Tabbed Search Interface** - Separate text search and advanced filters
+- **Multiple Genre Selection** - Checkbox-based genre filtering
+- **Production Company Filters** - Filter by studio preferences
+- **Keyword-Based Discovery** - Find movies by themes and concepts
+- **Pagination Support** - Efficient browsing with page controls
+
+### Rich Movie Information
+- **Comprehensive Details** - Genres, production companies, keywords, cast info
+- **Visual Elements** - High-quality posters, backdrops, and trailers
+- **Interactive UI** - Like/dislike buttons, watchlist management, trailer playback
+
+## 🔧 Development
 
 ### Database Migrations
-
-When you make changes to the models:
-
 ```bash
 dotnet ef migrations add MigrationName
 dotnet ef database update
 ```
 
-## Security Notes
+### Frontend Build
+```bash
+npm run build
+npm run preview
+```
 
-- Passwords are hashed using SHA256 (consider using bcrypt or Argon2 for production)
-- CORS is configured to allow all origins (restrict this in production)
-- No authentication middleware implemented (add JWT or similar for production)
+### Project Structure
+```
+MovieRecommendationSystem/
+├── MovieRecommendationBackend/     # .NET 8.0 Web API
+│   ├── Controllers/               # API endpoints
+│   ├── Services/                  # Business logic & TMDB integration
+│   ├── Models/                    # Database entities
+│   ├── DTOs/                      # Data transfer objects
+│   └── Data/                      # Database context
+└── movie-recommendation-frontend/  # React TypeScript app
+    ├── src/
+    │   ├── components/            # Reusable UI components
+    │   ├── pages/                 # Main application pages
+    │   ├── services/              # API integration
+    │   ├── store/                 # Redux state management
+    │   └── types/                 # TypeScript definitions
+```
 
-## Next Steps
+## 🔒 Security Features
 
-- Implement proper authentication and authorization
-- Add more sophisticated recommendation algorithms
-- Create a React frontend
-- Add unit tests
-- Implement caching for TMDB API calls
-- Add rate limiting
-- Implement logging and monitoring
+- **JWT Authentication** - Secure token-based authentication
+- **Password Hashing** - BCrypt for secure password storage
+- **CORS Configuration** - Proper cross-origin resource sharing
+- **Input Validation** - Server-side validation for all inputs
+- **SQL Injection Protection** - Entity Framework parameterized queries
 
-## Contributing
+## 🎨 UI/UX Highlights
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
+- **Dark Theme** - Modern dark UI with custom color palette
+- **Smooth Animations** - Hover effects, transitions, and loading states
+- **Intuitive Navigation** - Easy-to-use interface with clear visual hierarchy
+- **Accessibility** - ARIA labels, keyboard navigation, and screen reader support
 
-## License
+## 📊 Performance Optimizations
 
-This project is licensed under the MIT License.
+- **Lazy Loading** - Images and components load as needed
+- **Pagination** - Efficient data loading with page-based navigation
+- **Caching** - TMDB genre caching and optimized API calls
+- **Code Splitting** - Optimized bundle sizes for faster loading
+- **Responsive Images** - Multiple image sizes for different screen resolutions
+
+## 🚀 Future Enhancements
+
+- [ ] Collaborative filtering for user-to-user recommendations
+- [ ] Social features (reviews, friend recommendations)
+- [ ] Mobile app with React Native
+- [ ] Advanced analytics and user insights
+- [ ] Machine learning model improvements
+- [ ] Real-time notifications
+- [ ] Content moderation and admin panel
+
+## 📄 License
+
+MIT License - feel free to use this project for learning and development!
+
+---
+
+**Built with ❤️ using modern web technologies for the ultimate movie discovery experience!** 🎬✨
