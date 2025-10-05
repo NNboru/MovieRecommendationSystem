@@ -18,6 +18,7 @@ public class MovieDto
     public int? Runtime { get; set; }
     public string? Certification { get; set; }
     public List<string> Genres { get; set; } = new List<string>();
+    public string? TrailerId { get; set; }
     public double? UserRating { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

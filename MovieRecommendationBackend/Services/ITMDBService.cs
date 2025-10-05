@@ -5,7 +5,7 @@ namespace MovieRecommendationBackend.Services;
 public interface ITMDBService
 {
     Task<List<MovieDto>> GetPopularMoviesAsync(int page = 1, bool? includeAdult = null);
-    Task<List<MovieDto>> GetTrendingMoviesAsync(int page = 1);
+    Task<List<MovieDto>> GetTrendingMoviesAsync();
     Task<List<MovieDto>> GetTopRatedMoviesAsync(int page = 1);
     Task<List<MovieDto>> SearchMoviesAsync(string query, int page = 1, bool? includeAdult = null);
     Task<MovieDto?> GetMovieByIdAsync(int tmdbId);

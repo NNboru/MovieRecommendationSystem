@@ -27,6 +27,7 @@ import { useAppSelector } from '../hooks/redux';
 import { movieApi } from '../services/api';
 import { Movie, PaginatedResponse } from '../types';
 import HorizontalMovieList from '../components/movies/HorizontalMovieList';
+import TrailerModal from '../components/movies/TrailerModal';
 
 const MovieDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,8 +41,13 @@ const MovieDetailsPage: React.FC = () => {
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
-
+  const [trailerModalOpen, setTrailerModalOpen] = useState(false);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const handleTrailerClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setTrailerModalOpen(true);
+  };
 
   const fetchRecommendationsAndSimilar = async (movieId: number) => {
     try {
@@ -354,14 +360,17 @@ const MovieDetailsPage: React.FC = () => {
               </Box>
 
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<PlayArrow />}
-                  size="large"
-                  sx={{ minWidth: 140 }}
-                >
-                  Watch Trailer
-                </Button>
+                {movie?.trailerId && (
+                  <Button
+                    variant="contained"
+                    startIcon={<PlayArrow />}
+                    size="large"
+                    onClick={handleTrailerClick}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Watch Trailer
+                  </Button>
+                )}
 
                 <Button
                   variant={isInWatchlist ? "outlined" : "contained"}
@@ -381,39 +390,6 @@ const MovieDetailsPage: React.FC = () => {
               </Box>
             </Box>
           </Box>
-        </Box>
-
-        {/* Additional Sections */}
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h4" sx={{ mb: 3 }}>
-            More Information
-          </Typography>
-
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Movie Details
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    TMDB ID:
-                  </Typography>
-                  <Typography variant="body2">
-                    {movie.tmdbId}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Added to Database:
-                  </Typography>
-                  <Typography variant="body2">
-                    {new Date(movie.createdAt).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
         </Box>
 
         {/* Recommendations Section */}
@@ -462,6 +438,14 @@ const MovieDetailsPage: React.FC = () => {
           )}
         </Box>
       </Container>
+
+      {/* Trailer Modal */}
+      <TrailerModal
+        open={trailerModalOpen}
+        onClose={() => setTrailerModalOpen(false)}
+        trailerId={movie?.trailerId || null}
+        movieTitle={movie?.title || ''}
+      />
     </Box>
   );
 };

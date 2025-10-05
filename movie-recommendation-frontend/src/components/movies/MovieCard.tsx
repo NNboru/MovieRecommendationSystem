@@ -22,6 +22,7 @@ import { Movie, MovieCardProps } from '../../types';
 import WatchlistButton from './WatchlistButton';
 import LikeButton from './LikeButton';
 import DislikeButton from './DislikeButton';
+import TrailerModal from './TrailerModal';
 
 const MovieCard: React.FC<MovieCardProps> = ({
   movie,
@@ -32,11 +33,17 @@ const MovieCard: React.FC<MovieCardProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [imageError, setImageError] = useState(false);
+  const [trailerModalOpen, setTrailerModalOpen] = useState(false);
 
   const handleCardClick = () => {
     if (onMovieClick) {
       onMovieClick(movie);
     }
+  };
+
+  const handleTrailerClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setTrailerModalOpen(true);
   };
 
 
@@ -106,19 +113,38 @@ const MovieCard: React.FC<MovieCardProps> = ({
             },
           }}
         >
-          <IconButton
-            size="large"
-            onClick={handlePlayClick}
-            sx={{
-              color: 'white',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
-              },
-            }}
-          >
-            <PlayArrow fontSize="large" />
-          </IconButton>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <IconButton
+              size="large"
+              onClick={handlePlayClick}
+              sx={{
+                color: 'white',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <PlayArrow fontSize="large" />
+            </IconButton>
+            
+            {movie.trailerId && (
+              <IconButton
+                size="large"
+                onClick={handleTrailerClick}
+                sx={{
+                  color: 'white',
+                  backgroundColor: 'rgba(255,0,0,0.2)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,0,0,0.3)',
+                  },
+                }}
+                title="Watch Trailer"
+              >
+                <PlayArrow fontSize="large" />
+              </IconButton>
+            )}
+          </Box>
         </Box>
 
         {/* Action Buttons */}
@@ -264,6 +290,14 @@ const MovieCard: React.FC<MovieCardProps> = ({
           </IconButton>
         </Tooltip>
       </CardActions>
+
+      {/* Trailer Modal */}
+      <TrailerModal
+        open={trailerModalOpen}
+        onClose={() => setTrailerModalOpen(false)}
+        trailerId={movie.trailerId || null}
+        movieTitle={movie.title}
+      />
     </Card>
   );
 };

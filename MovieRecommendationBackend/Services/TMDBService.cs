@@ -71,9 +71,9 @@ public class TMDBService : ITMDBService
     }
 
 
-    public async Task<List<MovieDto>> GetTrendingMoviesAsync(int page = 1)
+    public async Task<List<MovieDto>> GetTrendingMoviesAsync()
     {
-        var url = $"{_baseUrl}/trending/movie/week?page={page}";
+        var url = $"{_baseUrl}/trending/movie/week";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
 
         string content = await ApiCall(url);
@@ -119,7 +119,7 @@ public class TMDBService : ITMDBService
 
     public async Task<MovieDto?> GetMovieByIdAsync(int tmdbId)
     {
-        var url = $"{_baseUrl}/movie/{tmdbId}";
+        var url = $"{_baseUrl}/movie/{tmdbId}?append_to_response=videos";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
 
         string content = await ApiCall(url);
@@ -338,7 +338,24 @@ public class TMDBService : ITMDBService
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
             Genres = await MapGenreIdsToNames(movie),
+            TrailerId = GetTrailerId(movie),
         };
+    }
+
+    private static string? GetTrailerId(TMDBMovie movie)
+    {
+        if (movie.Videos?.Results == null || !movie.Videos.Results.Any())
+            return null;
+
+        // First, try to find a video with type "Trailer"
+        var trailer = movie.Videos.Results.FirstOrDefault(v => 
+            v.Type?.Equals("Trailer", StringComparison.OrdinalIgnoreCase) == true);
+
+        if (trailer != null)
+            return trailer.Key;
+
+        // If no trailer found, return the first video
+        return movie.Videos.Results.FirstOrDefault()?.Key;
     }
 
     private static GenreDto MapToGenreDto(TMDBGenre genre)
@@ -462,6 +479,48 @@ public class TMDBService : ITMDBService
 
         [JsonProperty("vote_count")]
         public int VoteCount { get; set; }
+
+        [JsonProperty("videos")]
+        public TMDBVideos? Videos { get; set; }
+    }
+
+    private class TMDBVideos
+    {
+        [JsonProperty("results")]
+        public List<TMDBVideo>? Results { get; set; }
+    }
+
+    private class TMDBVideo
+    {
+        [JsonProperty("iso_639_1")]
+        public string? Iso6391 { get; set; }
+
+        [JsonProperty("iso_3166_1")]
+        public string? Iso31661 { get; set; }
+
+        [JsonProperty("name")]
+        public string? Name { get; set; }
+
+        [JsonProperty("key")]
+        public string? Key { get; set; }
+
+        [JsonProperty("site")]
+        public string? Site { get; set; }
+
+        [JsonProperty("size")]
+        public int Size { get; set; }
+
+        [JsonProperty("type")]
+        public string? Type { get; set; }
+
+        [JsonProperty("official")]
+        public bool Official { get; set; }
+
+        [JsonProperty("published_at")]
+        public string? PublishedAt { get; set; }
+
+        [JsonProperty("id")]
+        public string? Id { get; set; }
     }
 
     private class TMDBGenreResponse

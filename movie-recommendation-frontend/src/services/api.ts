@@ -113,7 +113,7 @@ export const movieApi = {
 
   // Get movie details from our backend (using TMDB ID)
   getMovieDetails: async (tmdbId: number): Promise<Movie> => {
-    const response: AxiosResponse<Movie> = await apiClient.get(`/movies/tmdb/${tmdbId}`);
+    const response: AxiosResponse<Movie> = await apiClient.get(`/movies/tmdb/${tmdbId}?append_to_response=videos`);
     return response.data;
   },
 

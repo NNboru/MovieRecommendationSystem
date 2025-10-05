@@ -6,6 +6,20 @@ export const LikeStatus = {
 
 export type LikeStatus = typeof LikeStatus[keyof typeof LikeStatus];
 
+// Video related types
+export interface Video {
+  iso_639_1: string;
+  iso_3166_1: string;
+  name: string;
+  key: string;
+  site: string;
+  size: number;
+  type: string;
+  official: boolean;
+  published_at: string;
+  id: string;
+}
+
 // Movie related types
 export interface Movie {
   id: number;
@@ -22,6 +36,8 @@ export interface Movie {
   originalTitle?: string;
   popularity?: number;
   genres: string[];
+  videos?: Video[];
+  trailerId?: string;
   userRating?: number;
   createdAt: string;
   updatedAt: string;
