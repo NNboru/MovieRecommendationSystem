@@ -109,11 +109,11 @@ public class MoviesController : ControllerBase
 
     // GET: api/movies/trending
     [HttpGet("trending")]
-    public async Task<ActionResult<DefaultResponse>> GetTrendingMovies()
+    public async Task<ActionResult<DefaultResponse>> GetTrendingMovies(int page = 1)
     {
         try
         {
-            var result = await _tmdbService.GetTrendingMoviesAsync();
+            var result = await _tmdbService.GetTheatreMoviesAsync(page);
             return Ok(new DefaultResponse
             {
                 Data = result.Movies,

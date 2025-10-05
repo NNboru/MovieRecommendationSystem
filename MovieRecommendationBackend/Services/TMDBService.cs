@@ -79,9 +79,9 @@ public class TMDBService : ITMDBService
     }
 
 
-    public async Task<DiscoverMoviesResult> GetTrendingMoviesAsync()
+    public async Task<DiscoverMoviesResult> GetTheatreMoviesAsync(int page = 1)
     {
-        var url = $"{_baseUrl}/trending/movie/week";
+        var url = $"{_baseUrl}/movie/now_playing?&page={page}";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
 
         string content = await ApiCall(url);

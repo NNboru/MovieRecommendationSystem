@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
-import { fetchPopularMovies, fetchTopRatedMovies, fetchPersonalizedRecommendations } from '../store/slices/movieSlice';
+import { fetchTrendingMovies, fetchPopularMovies, fetchTopRatedMovies, fetchPersonalizedRecommendations } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
 import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 import HeroSection from '../components/home/HeroSection';
@@ -18,8 +18,10 @@ const HomePage: React.FC = () => {
     popularMovies,
     topRatedMovies,
     loading,
+    trendingPagination,
     popularPagination,
     topRatedPagination,
+    currentTrendingPage,
     currentPopularPage,
     currentTopRatedPage,
   } = useAppSelector((state) => state.movies);
@@ -28,6 +30,10 @@ const HomePage: React.FC = () => {
     if (movie.tmdbId) {
       navigate(`/movie/${movie.tmdbId}`);
     }
+  };
+
+  const handleTrendingPageChange = (page: number) => {
+    dispatch(fetchTrendingMovies(page));
   };
 
   const handlePopularPageChange = (page: number) => {
@@ -62,13 +68,20 @@ const HomePage: React.FC = () => {
         {/* Trending Movies */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
-            Trending This Week
+            Currently in Theatres
           </Typography>
+          <Pagination
+            currentPage={currentTrendingPage}
+            totalPages={trendingPagination.totalPages}
+            totalResults={trendingPagination.totalResults}
+            onPageChange={handleTrendingPageChange}
+            disabled={loading.trending}
+          />
           {loading.error ? (
             <Alert severity="error" sx={{ mb: 2 }}>
               {loading.error}
             </Alert>
-          ) : loading.isLoading ? (
+          ) : loading.trending ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 400 }}>
               <CircularProgress />
             </Box>

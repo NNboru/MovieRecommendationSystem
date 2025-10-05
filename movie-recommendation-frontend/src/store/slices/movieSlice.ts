@@ -14,6 +14,7 @@ interface MovieState {
   loading: {
     isLoading: boolean;
     error?: string;
+    trending: boolean;
     popular: boolean;
     topRated: boolean;
     recommendations: boolean;
@@ -34,8 +35,14 @@ interface MovieState {
     totalPages: number;
     totalResults: number;
   };
+  trendingPagination: {
+    page: number;
+    totalPages: number;
+    totalResults: number;
+  };
   currentPopularPage: number;
   currentTopRatedPage: number;
+  currentTrendingPage: number;
   recommendations: Movie[];
   recommendationStrategy: RecommendationStrategy;
   recommendationMessage: string;
@@ -59,6 +66,7 @@ const initialState: MovieState = {
   loading: {
     isLoading: false,
     error: undefined,
+    trending: false,
     popular: false,
     topRated: false,
     recommendations: false,
@@ -79,8 +87,14 @@ const initialState: MovieState = {
     totalPages: 1,
     totalResults: 0,
   },
+  trendingPagination: {
+    page: 1,
+    totalPages: 1,
+    totalResults: 0,
+  },
   currentPopularPage: 1,
   currentTopRatedPage: 1,
+  currentTrendingPage: 1,
   recommendations: [],
   recommendationStrategy: RecommendationStrategy.InsufficientData,
   recommendationMessage: '',
@@ -206,20 +220,21 @@ const movieSlice = createSlice({
     builder
       // Fetch trending movies
       .addCase(fetchTrendingMovies.pending, (state) => {
-        state.loading.isLoading = true;
+        state.loading.trending = true;
         state.loading.error = undefined;
       })
       .addCase(fetchTrendingMovies.fulfilled, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.trending = false;
         state.trendingMovies = action.payload.data;
-        state.pagination = {
+        state.trendingPagination = {
           page: action.payload.page,
           totalPages: action.payload.totalPages,
           totalResults: action.payload.totalResults,
         };
+        state.currentTrendingPage = action.payload.page;
       })
       .addCase(fetchTrendingMovies.rejected, (state, action) => {
-        state.loading.isLoading = false;
+        state.loading.trending = false;
         state.loading.error = action.error.message;
       })
       // Fetch popular movies
