@@ -84,7 +84,7 @@ const MovieDetailsPage: React.FC = () => {
         setError(null);
         const movieData = await movieApi.getMovieDetails(parseInt(id));
         setMovie(movieData);
-        
+
         // Fetch recommendations and similar movies after movie details are loaded
         // Use the internal movie ID from the database
         fetchRecommendationsAndSimilar(parseInt(id));
@@ -303,17 +303,63 @@ const MovieDetailsPage: React.FC = () => {
                 {movie.overview || 'No description available.'}
               </Typography>
 
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                {movie.genres.map((genre, index) => (
-                  <Chip
-                    key={index}
-                    label={genre}
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                  />
-                ))}
+              {/* Genres */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
+                  Genres
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  {movie.genres.map((genre, index) => (
+                    <Chip
+                      key={index}
+                      label={genre}
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                    />
+                  ))}
+                </Box>
               </Box>
+
+              {/* Production Companies */}
+              {movie.productionCompanies && movie.productionCompanies.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
+                    Production Companies
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {movie.productionCompanies.map((company, index) => (
+                      <Chip
+                        key={index}
+                        label={company}
+                        variant="outlined"
+                        color="success"
+                        size="small"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Keywords */}
+              {movie.keywords && movie.keywords.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
+                    Keywords
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {movie.keywords.map((keyword, index) => (
+                      <Chip
+                        key={index}
+                        label={keyword}
+                        variant="outlined"
+                        color="info"
+                        size="small"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
 
               <Divider sx={{ my: 3 }} />
 

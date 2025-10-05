@@ -151,7 +151,7 @@ public class TMDBService : ITMDBService
 
     public async Task<MovieDto?> GetMovieByIdAsync(int tmdbId)
     {
-        var url = $"{_baseUrl}/movie/{tmdbId}?append_to_response=videos";
+        var url = $"{_baseUrl}/movie/{tmdbId}?append_to_response=videos,keywords,production_companies";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
 
         string content = await ApiCall(url);
@@ -370,6 +370,8 @@ public class TMDBService : ITMDBService
             OriginalTitle = movie.OriginalTitle,
             Popularity = movie.Popularity,
             Genres = await MapGenreIdsToNames(movie),
+            ProductionCompanies = MapProductionCompanies(movie),
+            Keywords = MapKeywords(movie),
             TrailerId = GetTrailerId(movie),
         };
     }
@@ -420,6 +422,16 @@ public class TMDBService : ITMDBService
             }
         }
         return genreNames ?? [];
+    }
+
+    private static List<string> MapProductionCompanies(TMDBMovie movie)
+    {
+        return movie.ProductionCompanies?.Select(pc => pc.Name).ToList() ?? new List<string>();
+    }
+
+    private static List<string> MapKeywords(TMDBMovie movie)
+    {
+        return movie.Keywords?.Keywords?.Select(k => k.Name).ToList() ?? new List<string>();
     }
 
     private async Task<List<MovieDto>> MapResultsToMovies(List<TMDBMovie>? results)
@@ -514,6 +526,12 @@ public class TMDBService : ITMDBService
 
         [JsonProperty("videos")]
         public TMDBVideos? Videos { get; set; }
+
+        [JsonProperty("production_companies")]
+        public List<TMDBProductionCompany>? ProductionCompanies { get; set; }
+
+        [JsonProperty("keywords")]
+        public TMDBKeywords? Keywords { get; set; }
     }
 
     private class TMDBVideos
@@ -553,6 +571,36 @@ public class TMDBService : ITMDBService
 
         [JsonProperty("id")]
         public string? Id { get; set; }
+    }
+
+    private class TMDBProductionCompany
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("logo_path")]
+        public string? LogoPath { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonProperty("origin_country")]
+        public string? OriginCountry { get; set; }
+    }
+
+    private class TMDBKeywords
+    {
+        [JsonProperty("keywords")]
+        public List<TMDBKeyword>? Keywords { get; set; }
+    }
+
+    private class TMDBKeyword
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
     }
 
     private class TMDBGenreResponse

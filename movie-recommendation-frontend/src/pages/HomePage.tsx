@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
       <HeroSection movies={trendingMovies.slice(0, 5)} />
 
       <Container sx={{ py: 4 }} maxWidth={false}>
-        {/* Trending Movies */}
+        {/* Movies currently in theatres */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Currently in Theatres

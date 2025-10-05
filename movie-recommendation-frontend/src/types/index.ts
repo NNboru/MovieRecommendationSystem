@@ -36,6 +36,8 @@ export interface Movie {
   originalTitle?: string;
   popularity?: number;
   genres: string[];
+  productionCompanies: string[];
+  keywords: string[];
   videos?: Video[];
   trailerId?: string;
   userRating?: number;
