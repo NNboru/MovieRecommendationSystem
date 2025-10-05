@@ -50,7 +50,7 @@ public class TMDBService : ITMDBService
         return "{}";
     }
 
-    public async Task<List<MovieDto>> GetPopularMoviesAsync(int page = 1, bool? includeAdult = null)
+    public async Task<DiscoverMoviesResult> GetPopularMoviesAsync(int page = 1, bool? includeAdult = null)
     {
         var url = $"{_baseUrl}/movie/popular?language=en-US&page={page}";
         
@@ -67,11 +67,19 @@ public class TMDBService : ITMDBService
 
         _logger.LogInformation("Successfully retrieved {Count} popular movies from TMDB", result?.Results?.Count ?? 0);
         
-        return await MapResultsToMovies(result?.Results);
+        var movies = await MapResultsToMovies(result?.Results);
+        
+        return new DiscoverMoviesResult
+        {
+            Movies = movies,
+            Page = result?.Page ?? 1,
+            TotalPages = result?.TotalPages ?? 1,
+            TotalResults = result?.TotalResults ?? 0
+        };
     }
 
 
-    public async Task<List<MovieDto>> GetTrendingMoviesAsync()
+    public async Task<DiscoverMoviesResult> GetTrendingMoviesAsync()
     {
         var url = $"{_baseUrl}/trending/movie/week";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
@@ -81,10 +89,18 @@ public class TMDBService : ITMDBService
 
         _logger.LogInformation("Successfully retrieved {Count} trending movies from TMDB", result?.Results?.Count ?? 0);
         
-        return await MapResultsToMovies(result?.Results);
+        var movies = await MapResultsToMovies(result?.Results);
+        
+        return new DiscoverMoviesResult
+        {
+            Movies = movies,
+            Page = result?.Page ?? 1,
+            TotalPages = result?.TotalPages ?? 1,
+            TotalResults = result?.TotalResults ?? 0
+        };
     }
 
-    public async Task<List<MovieDto>> GetTopRatedMoviesAsync(int page = 1)
+    public async Task<DiscoverMoviesResult> GetTopRatedMoviesAsync(int page = 1)
     {
         var url = $"{_baseUrl}/movie/top_rated?&page={page}";
         _logger.LogInformation("Making TMDB API request to: {Url}", url);
@@ -94,10 +110,18 @@ public class TMDBService : ITMDBService
 
         _logger.LogInformation("Successfully retrieved {Count} top-rated movies from TMDB", result?.Results?.Count ?? 0);
         
-        return await MapResultsToMovies(result?.Results);
+        var movies = await MapResultsToMovies(result?.Results);
+        
+        return new DiscoverMoviesResult
+        {
+            Movies = movies,
+            Page = result?.Page ?? 1,
+            TotalPages = result?.TotalPages ?? 1,
+            TotalResults = result?.TotalResults ?? 0
+        };
     }
 
-    public async Task<List<MovieDto>> SearchMoviesAsync(string query, int page = 1, bool? includeAdult = null)
+    public async Task<DiscoverMoviesResult> SearchMoviesAsync(string query, int page = 1, bool? includeAdult = null)
     {
         var encodedQuery = Uri.EscapeDataString(query);
         var url = $"{_baseUrl}/search/movie?query={encodedQuery}&page={page}";
@@ -114,7 +138,15 @@ public class TMDBService : ITMDBService
 
         _logger.LogInformation("Successfully retrieved {Count} search results from TMDB", result?.Results?.Count ?? 0);
         
-        return await MapResultsToMovies(result?.Results);
+        var movies = await MapResultsToMovies(result?.Results);
+        
+        return new DiscoverMoviesResult
+        {
+            Movies = movies,
+            Page = result?.Page ?? 1,
+            TotalPages = result?.TotalPages ?? 1,
+            TotalResults = result?.TotalResults ?? 0
+        };
     }
 
     public async Task<MovieDto?> GetMovieByIdAsync(int tmdbId)

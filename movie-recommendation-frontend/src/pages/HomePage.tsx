@@ -1,20 +1,26 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import { useAppSelector } from '../hooks/redux';
-// Movies are fetched in App.tsx
+import { useAppSelector, useAppDispatch } from '../hooks/redux';
+import { fetchPopularMovies, fetchTopRatedMovies } from '../store/slices/movieSlice';
 import MovieList from '../components/movies/MovieList';
 import HorizontalMovieList from '../components/movies/HorizontalMovieList';
 import HeroSection from '../components/home/HeroSection';
+import Pagination from '../components/ui/Pagination';
 import { Movie } from '../types';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const {
     trendingMovies,
     popularMovies,
     topRatedMovies,
     loading,
+    popularPagination,
+    topRatedPagination,
+    currentPopularPage,
+    currentTopRatedPage,
   } = useAppSelector((state) => state.movies);
 
   const handleMovieClick = (movie: Movie) => {
@@ -23,7 +29,13 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Movies are fetched in App.tsx on app load
+  const handlePopularPageChange = (page: number) => {
+    dispatch(fetchPopularMovies(page));
+  };
+
+  const handleTopRatedPageChange = (page: number) => {
+    dispatch(fetchTopRatedMovies(page));
+  };
 
   if (loading.isLoading && !trendingMovies.length) {
     return (
@@ -75,12 +87,21 @@ const HomePage: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <HorizontalMovieList
-              movies={popularMovies}
-              showWatchlistButton={true}
-              showLikeButtons={true}
-              onMovieClick={handleMovieClick}
-            />
+            <>
+              <HorizontalMovieList
+                movies={popularMovies}
+                showWatchlistButton={true}
+                showLikeButtons={true}
+                onMovieClick={handleMovieClick}
+              />
+              <Pagination
+                currentPage={currentPopularPage}
+                totalPages={popularPagination.totalPages}
+                totalResults={popularPagination.totalResults}
+                onPageChange={handlePopularPageChange}
+                disabled={loading.isLoading}
+              />
+            </>
           )}
         </Box>
 
@@ -95,6 +116,13 @@ const HomePage: React.FC = () => {
             showWatchlistButton={true}
             showLikeButtons={true}
             onMovieClick={handleMovieClick}
+          />
+          <Pagination
+            currentPage={currentTopRatedPage}
+            totalPages={topRatedPagination.totalPages}
+            totalResults={topRatedPagination.totalResults}
+            onPageChange={handleTopRatedPageChange}
+            disabled={loading.isLoading}
           />
         </Box>
       </Container>

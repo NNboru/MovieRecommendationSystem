@@ -92,8 +92,14 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var movies = await _tmdbService.GetPopularMoviesAsync(page);
-            return Ok(CreateUIResponse(movies));
+            var result = await _tmdbService.GetPopularMoviesAsync(page);
+            return Ok(new DefaultResponse
+            {
+                Data = result.Movies,
+                Page = result.Page,
+                TotalPages = result.TotalPages,
+                TotalResults = result.TotalResults
+            });
         }
         catch (Exception ex)
         {
@@ -107,8 +113,14 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var movies = await _tmdbService.GetTrendingMoviesAsync();
-            return Ok(CreateUIResponse(movies));
+            var result = await _tmdbService.GetTrendingMoviesAsync();
+            return Ok(new DefaultResponse
+            {
+                Data = result.Movies,
+                Page = result.Page,
+                TotalPages = result.TotalPages,
+                TotalResults = result.TotalResults
+            });
         }
         catch (Exception ex)
         {
@@ -122,8 +134,14 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var movies = await _tmdbService.GetTopRatedMoviesAsync(page);
-            return Ok(CreateUIResponse(movies));
+            var result = await _tmdbService.GetTopRatedMoviesAsync(page);
+            return Ok(new DefaultResponse
+            {
+                Data = result.Movies,
+                Page = result.Page,
+                TotalPages = result.TotalPages,
+                TotalResults = result.TotalResults
+            });
         }
         catch (Exception ex)
         {
@@ -144,8 +162,14 @@ public class MoviesController : ControllerBase
                 return BadRequest("Search query is required");
             }
 
-            var movies = await _tmdbService.SearchMoviesAsync(q, page);
-            return Ok(CreateUIResponse(movies));
+            var result = await _tmdbService.SearchMoviesAsync(q, page);
+            return Ok(new DefaultResponse
+            {
+                Data = result.Movies,
+                Page = result.Page,
+                TotalPages = result.TotalPages,
+                TotalResults = result.TotalResults
+            });
         }
         catch (Exception ex)
         {

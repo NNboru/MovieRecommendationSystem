@@ -21,6 +21,18 @@ interface MovieState {
     totalPages: number;
     totalResults: number;
   };
+  popularPagination: {
+    page: number;
+    totalPages: number;
+    totalResults: number;
+  };
+  topRatedPagination: {
+    page: number;
+    totalPages: number;
+    totalResults: number;
+  };
+  currentPopularPage: number;
+  currentTopRatedPage: number;
 }
 
 const initialState: MovieState = {
@@ -41,6 +53,18 @@ const initialState: MovieState = {
     totalPages: 0,
     totalResults: 0,
   },
+  popularPagination: {
+    page: 1,
+    totalPages: 1,
+    totalResults: 0,
+  },
+  topRatedPagination: {
+    page: 1,
+    totalPages: 1,
+    totalResults: 0,
+  },
+  currentPopularPage: 1,
+  currentTopRatedPage: 1,
 };
 
 // Async thunks
@@ -172,6 +196,12 @@ const movieSlice = createSlice({
       .addCase(fetchPopularMovies.fulfilled, (state, action) => {
         state.loading.isLoading = false;
         state.popularMovies = action.payload.data;
+        state.popularPagination = {
+          page: action.payload.page,
+          totalPages: action.payload.totalPages,
+          totalResults: action.payload.totalResults,
+        };
+        state.currentPopularPage = action.payload.page;
       })
       .addCase(fetchPopularMovies.rejected, (state, action) => {
         state.loading.isLoading = false;
@@ -185,6 +215,12 @@ const movieSlice = createSlice({
       .addCase(fetchTopRatedMovies.fulfilled, (state, action) => {
         state.loading.isLoading = false;
         state.topRatedMovies = action.payload.data;
+        state.topRatedPagination = {
+          page: action.payload.page,
+          totalPages: action.payload.totalPages,
+          totalResults: action.payload.totalResults,
+        };
+        state.currentTopRatedPage = action.payload.page;
       })
       .addCase(fetchTopRatedMovies.rejected, (state, action) => {
         state.loading.isLoading = false;
