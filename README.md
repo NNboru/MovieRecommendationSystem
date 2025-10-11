@@ -33,7 +33,7 @@ A full-stack movie recommendation platform with personalized content-based filte
 
 ### Backend
 - **.NET 8.0 Web API** - RESTful API with Swagger documentation
-- **PostgreSQL** - Primary database with Entity Framework Core
+- **PostgreSQL / SQL Server** - Flexible database provider with Entity Framework Core
 - **JWT Authentication** - Secure token-based authentication
 - **TMDB API Integration** - Real-time movie data, images, and metadata
 
@@ -49,7 +49,7 @@ A full-stack movie recommendation platform with personalized content-based filte
 ### Prerequisites
 - .NET 8.0 SDK
 - Node.js 18+ and npm
-- PostgreSQL database
+- **Database**: PostgreSQL OR SQL Server (configurable)
 - TMDB API key ([Get one here](https://www.themoviedb.org/settings/api))
 
 ### Backend Setup
@@ -60,17 +60,29 @@ cd MovieRecommendationBackend
 cp appsettings.Development.json appsettings.json
 ```
 
-2. **Update `appsettings.json`**:
+2. **Configure Database Provider** - Choose PostgreSQL or SQL Server:
 ```json
 {
+  "DatabaseProvider": "PostgreSQL",
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=MovieRecommendationDB;Username=your_username;Password=your_password"
+    "PostgreSQL": "Host=localhost;Database=MovieRecommendationDB;Username=your_username;Password=your_password",
+    "SqlServer": "Server=localhost;Database=MovieRecommendationDB;User Id=sa;Password=YourPassword123;TrustServerCertificate=True;"
+  }
+}
+```
+
+3. **Complete `appsettings.json` configuration**:
+```json
+{
+  "DatabaseProvider": "PostgreSQL",
+  "ConnectionStrings": {
+    "PostgreSQL": "Host=localhost;Database=MovieRecommendationDB;Username=your_username;Password=your_password",
+    "SqlServer": "Server=localhost;Database=MovieRecommendationDB;UserId=sa;Password=YourPassword123;TrustServerCertificate=True;"
   },
-  "JwtSettings": {
+  "Jwt": {
     "SecretKey": "your-super-secret-key-here-minimum-32-characters",
-    "Issuer": "MovieRecommendationSystem",
-    "Audience": "MovieRecommendationUsers",
-    "ExpirationHours": 24
+    "Issuer": "MovieRecommendationAPI",
+    "Audience": "MovieRecommendationClient"
   },
   "TMDB": {
     "ApiKey": "your_tmdb_api_key_here",
@@ -79,7 +91,7 @@ cp appsettings.Development.json appsettings.json
 }
 ```
 
-3. **Setup database and run**:
+4. **Setup database and run**:
 ```bash
 dotnet ef database update
 dotnet run
@@ -153,10 +165,21 @@ npm run dev
 ## 🔧 Development
 
 ### Database Migrations
+
+**For PostgreSQL:**
 ```bash
 dotnet ef migrations add MigrationName
 dotnet ef database update
 ```
+
+**For SQL Server:**
+```bash
+# First, set DatabaseProvider to "SqlServer" in appsettings.json
+dotnet ef migrations add MigrationName
+dotnet ef database update
+```
+
+> **⚠️ Important**: Migrations are database-specific. If you switch providers, you may need to regenerate migrations or maintain separate migration folders for each provider.
 
 ### Frontend Build
 ```bash

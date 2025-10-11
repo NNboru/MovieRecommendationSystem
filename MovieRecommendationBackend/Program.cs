@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MovieRecommendationBackend.Data;
 using MovieRecommendationBackend.Services;
+using MovieRecommendationBackend.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,9 +48,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Add Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Validate database configuration
+builder.Configuration.ValidateDatabaseConfiguration();
+
+// Add Entity Framework with database provider abstraction
+builder.Services.AddDatabaseContext(builder.Configuration);
 
 // Add HttpClient for TMDB service
 builder.Services.AddHttpClient<TMDBService>(client =>
